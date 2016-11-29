@@ -1,0 +1,35 @@
+//
+//  tantan.pch
+//  TanTanDemo
+//
+//  Created by zhujiamin on 2016/11/16.
+//  Copyright © 2016年 zhujiamin. All rights reserved.
+//
+
+#ifndef tantan_pch
+#define tantan_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+
+/**
+ *  屏幕大小
+ */
+#define SCRW        [[UIScreen mainScreen] bounds].size.width
+#define SCRH        [[UIScreen mainScreen] bounds].size.height
+
+#define SVIEW_W     self.view.bounds.size.width
+#define SVIEW_H     self.view.bounds.size.height
+
+#define DROPDISTANCE  100
+#define MOSTCARDNUM  3
+
+#define RESETFRAME      @"resetFrameNotification"
+#define MOVEACTION      @"moveActionNotification"
+#define STATECHANGE     @"stateChangeNotification"
+
+
+#import "UIView+Extension.h"
+
+#endif /* tantan_pch */

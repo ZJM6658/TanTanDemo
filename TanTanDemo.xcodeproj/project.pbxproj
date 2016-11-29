@@ -7,14 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E3123AE91DDDF9B800ABC515 /* M_CardFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */; };
 		E36F709E1DDB45DE004B9889 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F709D1DDB45DE004B9889 /* main.m */; };
 		E36F70A11DDB45DE004B9889 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70A01DDB45DE004B9889 /* AppDelegate.m */; };
-		E36F70A41DDB45DE004B9889 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70A31DDB45DE004B9889 /* ViewController.m */; };
-		E36F70A71DDB45DE004B9889 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E36F70A51DDB45DE004B9889 /* Main.storyboard */; };
 		E36F70A91DDB45DE004B9889 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36F70A81DDB45DE004B9889 /* Assets.xcassets */; };
 		E36F70AC1DDB45DE004B9889 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E36F70AA1DDB45DE004B9889 /* LaunchScreen.storyboard */; };
 		E36F70B71DDB45DE004B9889 /* TanTanDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70B61DDB45DE004B9889 /* TanTanDemoTests.m */; };
 		E36F70C21DDB45DE004B9889 /* TanTanDemoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70C11DDB45DE004B9889 /* TanTanDemoUITests.m */; };
+		E36F70D11DDB461C004B9889 /* VC_Root.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70D01DDB461C004B9889 /* VC_Root.m */; };
+		E3758D701DDBF6DA00CA90DE /* V_SlideCard.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */; };
+		E3758D731DDBFD7600CA90DE /* V_SlideCardCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D721DDBFD7600CA90DE /* V_SlideCardCell.m */; };
+		E3758D771DDC3AC800CA90DE /* UIView+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D761DDC3AC800CA90DE /* UIView+Extension.m */; };
+		E3758D7A1DDC501700CA90DE /* M_SlideCard.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D791DDC501700CA90DE /* M_SlideCard.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,13 +39,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E3123AE71DDDF9B800ABC515 /* M_CardFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = M_CardFrame.h; sourceTree = "<group>"; };
+		E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = M_CardFrame.m; sourceTree = "<group>"; };
 		E36F70991DDB45DE004B9889 /* TanTanDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TanTanDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36F709D1DDB45DE004B9889 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		E36F709F1DDB45DE004B9889 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		E36F70A01DDB45DE004B9889 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		E36F70A21DDB45DE004B9889 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		E36F70A31DDB45DE004B9889 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		E36F70A61DDB45DE004B9889 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		E36F70A81DDB45DE004B9889 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E36F70AB1DDB45DE004B9889 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E36F70AD1DDB45DE004B9889 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -51,6 +54,17 @@
 		E36F70BD1DDB45DE004B9889 /* TanTanDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TanTanDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36F70C11DDB45DE004B9889 /* TanTanDemoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TanTanDemoUITests.m; sourceTree = "<group>"; };
 		E36F70C31DDB45DE004B9889 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E36F70CF1DDB461C004B9889 /* VC_Root.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VC_Root.h; sourceTree = "<group>"; };
+		E36F70D01DDB461C004B9889 /* VC_Root.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VC_Root.m; sourceTree = "<group>"; };
+		E3758D6E1DDBF6DA00CA90DE /* V_SlideCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = V_SlideCard.h; sourceTree = "<group>"; };
+		E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = V_SlideCard.m; sourceTree = "<group>"; };
+		E3758D711DDBFD7600CA90DE /* V_SlideCardCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = V_SlideCardCell.h; sourceTree = "<group>"; };
+		E3758D721DDBFD7600CA90DE /* V_SlideCardCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = V_SlideCardCell.m; sourceTree = "<group>"; };
+		E3758D741DDC38D200CA90DE /* tantan.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tantan.pch; sourceTree = "<group>"; };
+		E3758D751DDC3AC800CA90DE /* UIView+Extension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Extension.h"; sourceTree = "<group>"; };
+		E3758D761DDC3AC800CA90DE /* UIView+Extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Extension.m"; sourceTree = "<group>"; };
+		E3758D781DDC501700CA90DE /* M_SlideCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = M_SlideCard.h; sourceTree = "<group>"; };
+		E3758D791DDC501700CA90DE /* M_SlideCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = M_SlideCard.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,9 +117,18 @@
 			children = (
 				E36F709F1DDB45DE004B9889 /* AppDelegate.h */,
 				E36F70A01DDB45DE004B9889 /* AppDelegate.m */,
-				E36F70A21DDB45DE004B9889 /* ViewController.h */,
-				E36F70A31DDB45DE004B9889 /* ViewController.m */,
-				E36F70A51DDB45DE004B9889 /* Main.storyboard */,
+				E3758D751DDC3AC800CA90DE /* UIView+Extension.h */,
+				E3758D761DDC3AC800CA90DE /* UIView+Extension.m */,
+				E36F70CF1DDB461C004B9889 /* VC_Root.h */,
+				E36F70D01DDB461C004B9889 /* VC_Root.m */,
+				E3758D781DDC501700CA90DE /* M_SlideCard.h */,
+				E3758D791DDC501700CA90DE /* M_SlideCard.m */,
+				E3123AE71DDDF9B800ABC515 /* M_CardFrame.h */,
+				E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */,
+				E3758D6E1DDBF6DA00CA90DE /* V_SlideCard.h */,
+				E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */,
+				E3758D711DDBFD7600CA90DE /* V_SlideCardCell.h */,
+				E3758D721DDBFD7600CA90DE /* V_SlideCardCell.m */,
 				E36F70A81DDB45DE004B9889 /* Assets.xcassets */,
 				E36F70AA1DDB45DE004B9889 /* LaunchScreen.storyboard */,
 				E36F70AD1DDB45DE004B9889 /* Info.plist */,
@@ -118,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				E36F709D1DDB45DE004B9889 /* main.m */,
+				E3758D741DDC38D200CA90DE /* tantan.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -207,7 +231,7 @@
 				TargetAttributes = {
 					E36F70981DDB45DD004B9889 = {
 						CreatedOnToolsVersion = 8.0;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 					};
 					E36F70B11DDB45DE004B9889 = {
 						CreatedOnToolsVersion = 8.0;
@@ -248,7 +272,6 @@
 			files = (
 				E36F70AC1DDB45DE004B9889 /* LaunchScreen.storyboard in Resources */,
 				E36F70A91DDB45DE004B9889 /* Assets.xcassets in Resources */,
-				E36F70A71DDB45DE004B9889 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,9 +296,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36F70A41DDB45DE004B9889 /* ViewController.m in Sources */,
+				E3758D771DDC3AC800CA90DE /* UIView+Extension.m in Sources */,
+				E3123AE91DDDF9B800ABC515 /* M_CardFrame.m in Sources */,
+				E3758D701DDBF6DA00CA90DE /* V_SlideCard.m in Sources */,
+				E3758D7A1DDC501700CA90DE /* M_SlideCard.m in Sources */,
+				E36F70D11DDB461C004B9889 /* VC_Root.m in Sources */,
 				E36F70A11DDB45DE004B9889 /* AppDelegate.m in Sources */,
 				E36F709E1DDB45DE004B9889 /* main.m in Sources */,
+				E3758D731DDBFD7600CA90DE /* V_SlideCardCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,14 +339,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		E36F70A51DDB45DE004B9889 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				E36F70A61DDB45DE004B9889 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		E36F70AA1DDB45DE004B9889 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -422,7 +442,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
+				GCC_PREFIX_HEADER = "$(SRCROOT)/TanTanDemo/tantan.pch";
 				INFOPLIST_FILE = TanTanDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = zhujiamin.TanTanDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -433,7 +456,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
+				GCC_PREFIX_HEADER = "$(SRCROOT)/TanTanDemo/tantan.pch";
 				INFOPLIST_FILE = TanTanDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = zhujiamin.TanTanDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -505,6 +531,7 @@
 				E36F70C81DDB45DE004B9889 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E36F70C91DDB45DE004B9889 /* Build configuration list for PBXNativeTarget "TanTanDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -513,6 +540,7 @@
 				E36F70CB1DDB45DE004B9889 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E36F70CC1DDB45DE004B9889 /* Build configuration list for PBXNativeTarget "TanTanDemoUITests" */ = {
 			isa = XCConfigurationList;
@@ -521,6 +549,7 @@
 				E36F70CE1DDB45DE004B9889 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
