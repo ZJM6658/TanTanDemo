@@ -25,6 +25,7 @@
 @protocol V_SlideCardDataSource<NSObject>
 
 - (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index;//should must be overrided
+- (void)loadNewData;
 
 @optional
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;//default is 3;

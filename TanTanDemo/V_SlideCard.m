@@ -75,17 +75,24 @@
         cell.dataItem = [self slideCard:self itemForIndex:i];
         cell.currentState = i;
         [cell addAllObserver];
+        cell.hidden = NO;
+
         [cell removeFromSuperview];
         [self addSubview:cell];
         [self sendSubviewToBack:cell];
         
         self.latestItemIndex = i;
         [UIView animateWithDuration:0.3 animations:^{
-            M_CardFrame *frame = self.frameArray[i];
             //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
             cell.transform = CGAffineTransformMakeRotation((0.0f * M_PI) / 180.0f);
 
-            cell.x = frame.x;
+            CGRect oldFrame = cell.frame;
+            M_CardFrame *frame = self.frameArray[i];
+            oldFrame.origin.x = frame.x;
+            oldFrame.origin.y = frame.y;
+            oldFrame.size.width = frame.width;
+            oldFrame.size.height = frame.height;
+            cell.frame = oldFrame;
         }];
     }
 }
@@ -168,21 +175,19 @@
     } else {
         [cell removeAllObserver];
         _realCardNum -= 1;
-
-        int index = (int)_realCardNum;
-        M_CardFrame *frame = self.frameArray[index];
-        cell.hidden = YES;
-        cell.width = frame.width;
-        cell.height = frame.height;
-        
         cell.x = -cell.height;
-
         cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
-        cell.hidden = NO;
     }
     if (!_realCardNum) {
-        [self reloadData];
+        //协议方法
+        if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
+            [self.dataSource loadNewData];
+        }
         
+        //主动刷新
+        //[self reloadData];
+        
+        //提示
 //        [[[UIAlertView alloc] initWithTitle:@"没有更多数据了" message:@"请实现加载下一页方法" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil] show];
     }
 }

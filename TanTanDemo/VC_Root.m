@@ -8,7 +8,9 @@
 
 #import "VC_Root.h"
 
-@interface VC_Root ()
+@interface VC_Root () {
+    NSInteger _pageNo;
+}
 
 @property (nonatomic, strong) NSMutableArray *listData;
 @property (nonatomic, strong) V_SlideCard *slideCard;
@@ -20,6 +22,7 @@
 #pragma mark - LifeCycle
 - (void)viewDidLoad {
     [super viewDidLoad];
+    _pageNo = 0;
     self.view.height -= 64;
     self.edgesForExtendedLayout = UIRectEdgeNone;
     self.extendedLayoutIncludesOpaqueBars = NO;
@@ -57,7 +60,7 @@
     NSMutableArray *itemArray = [[NSMutableArray alloc] init];
 
     for (NSInteger i = 0; i < 10; i++) {
-        NSString *imageName = [NSString stringWithFormat:@"tantan%lu%lu", pageNo,i];
+        NSString *imageName = [NSString stringWithFormat:@"tantan%lu%lu", 0,i];
         NSString *nickName = [NSString stringWithFormat:@"姓名%lu%lu", pageNo,i];
 
         [itemArray addObject:[[M_SlideCard alloc] initWithImage:imageName andName:nickName andConstellation:@"某星座" andJob:@"职位" andDistance:[NSString stringWithFormat:@"%lu%lukm", pageNo,i] andAge:@"23岁"]];
@@ -81,6 +84,12 @@
 
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard {
     return self.listData.count;
+}
+
+- (void)loadNewData {
+    _pageNo ++;
+    self.listData = [self getDataSourceWithPageNo:_pageNo];
+    [self.slideCard reloadData];
 }
 
 #pragma mark - private methods
