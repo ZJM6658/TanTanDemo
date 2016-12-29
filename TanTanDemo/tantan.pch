@@ -22,13 +22,14 @@
 #define SVIEW_W     self.view.bounds.size.width
 #define SVIEW_H     self.view.bounds.size.height
 
-#define DROPDISTANCE  100
-#define MOSTCARDNUM  3
+#define DROP_DISTANCE  100
+#define MOST_CARD_NUM  3
 
 #define RESETFRAME      @"resetFrameNotification"
 #define MOVEACTION      @"moveActionNotification"
 #define STATECHANGE     @"stateChangeNotification"
 
+#define RGBA(r,g,b,a)     [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:a]
 
 #import "UIView+Extension.h"
 

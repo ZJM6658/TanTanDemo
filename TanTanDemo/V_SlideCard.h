@@ -30,6 +30,6 @@
 @optional
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;//default is 3;
 - (CGFloat)slideCard:(V_SlideCard *)slideCard heightForItemAtIndex:(NSInteger )index;//default is 'self.height - 180'
-- (CGFloat)slideCard:(V_SlideCard *)slideCard widthForItemAtIndex:(NSInteger )index;//default is 'self.width - 28'
+- (CGFloat)slideCard:(V_SlideCard *)slideCard widthForItemAtIndex:(NSInteger )index;//default is 'self.width - 20'
 
 @end

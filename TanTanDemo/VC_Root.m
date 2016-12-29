@@ -60,7 +60,7 @@
     NSMutableArray *itemArray = [[NSMutableArray alloc] init];
 
     for (NSInteger i = 0; i < 10; i++) {
-        NSString *imageName = [NSString stringWithFormat:@"tantan%lu%lu", 0,i];
+        NSString *imageName = [NSString stringWithFormat:@"tantan%d%lu", 0,i];
         NSString *nickName = [NSString stringWithFormat:@"姓名%lu%lu", pageNo,i];
 
         [itemArray addObject:[[M_SlideCard alloc] initWithImage:imageName andName:nickName andConstellation:@"某星座" andJob:@"职位" andDistance:[NSString stringWithFormat:@"%lu%lukm", pageNo,i] andAge:@"23岁"]];

@@ -31,7 +31,7 @@
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
         self.userInteractionEnabled = YES;
-        self.layer.borderColor = [UIColor grayColor].CGColor;
+        self.layer.borderColor = RGBA(200, 200, 200, 1).CGColor;
         self.layer.borderWidth = 1;
         self.layer.cornerRadius = 5;
         self.layer.masksToBounds = YES;
@@ -135,8 +135,8 @@
 
 - (UILabel *)lb_Name {
     if (!_lb_Name) {
-        _lb_Name = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.iV_User.frame), 100, 30)];
-        _lb_Name.font = [UIFont systemFontOfSize:13];
+        _lb_Name = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.iV_User.frame), 100, 20)];
+        _lb_Name.font = [UIFont boldSystemFontOfSize:16];
 
     }
     return _lb_Name;
@@ -144,7 +144,7 @@
 
 - (UILabel *)lb_Age {
     if (!_lb_Age) {
-        _lb_Age = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_Name.frame), 30, 30)];
+        _lb_Age = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_Name.frame), 30, 20)];
         _lb_Age.font = [UIFont systemFontOfSize:13];
         _lb_Age.textColor = [UIColor redColor];
 
@@ -154,8 +154,8 @@
 
 - (UILabel *)lb_constellation {
     if (!_lb_constellation) {
-        _lb_constellation = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(self.lb_Age.frame), CGRectGetMaxY(self.lb_Name.frame), 50, 30)];
-        _lb_constellation.font = [UIFont systemFontOfSize:13];
+        _lb_constellation = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(self.lb_Age.frame), CGRectGetMaxY(self.lb_Name.frame), 50, 20)];
+        _lb_constellation.font = [UIFont systemFontOfSize:11];
 
     }
     return _lb_constellation;
@@ -163,8 +163,8 @@
 
 - (UILabel *)lb_jobOrDistance {
     if (!_lb_jobOrDistance) {
-        _lb_jobOrDistance = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_Age.frame), 30, 30)];
-        _lb_jobOrDistance.font = [UIFont systemFontOfSize:13];
+        _lb_jobOrDistance = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_Age.frame), 30, 20)];
+        _lb_jobOrDistance.font = [UIFont systemFontOfSize:11];
     }
     return _lb_jobOrDistance;
 }

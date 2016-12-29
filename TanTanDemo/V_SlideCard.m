@@ -33,36 +33,46 @@
         self.backgroundColor = [UIColor whiteColor];
         self.latestItemIndex = 0;
         _buttonWidth = 60;
-        _realCardNum = MOSTCARDNUM + 1;
+        _realCardNum = MOST_CARD_NUM + 1;
     }
     return self;
 }
 
 - (void)layoutSlideCards {
-    CGFloat offsetX = 10;
+    CGFloat offsetX = 12;
     CGFloat offsetY = 10;
-    CGFloat offsetXSpace = 4;
-    CGFloat offsetYSpace = 10;
+    CGFloat cardXSpace = 14 / (MOST_CARD_NUM - 1);
+    CGFloat cardYSpace = 2 * offsetY;
+    CGFloat cardHeightSpace = 10;
 
     NSInteger cardNum = [self numberOfItemsInSlideCard:self] > _realCardNum ? _realCardNum : [self numberOfItemsInSlideCard:self];
+    
+    
     for (NSInteger i = 0; i < cardNum; i ++) {
-        if (i < MOSTCARDNUM) {
-            offsetX += offsetXSpace;
-            offsetY += offsetYSpace;
+        if (i < MOST_CARD_NUM && i > 0) {
+            offsetX += cardXSpace;
+            offsetY += cardYSpace;
+            offsetY += cardHeightSpace / MOST_CARD_NUM * (MOST_CARD_NUM - i);
         }
+
+        CGFloat cellWidth = [self slideCard:self widthForItemAtIndex:i] - 2 * offsetX;
+        CGFloat cellHeight = [self slideCard:self heightForItemAtIndex:i] - cardYSpace * i;
         
-        CGFloat cellWidth = [self slideCard:self widthForItemAtIndex:i] - 28;
-        V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellWidth, [self slideCard:self heightForItemAtIndex:i])];
+        V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellWidth, cellHeight)];
+        
+#warning 初始化之后改变frame属性,因为没有约束,cell的放大,子View的frame会有问题！！
+        cell.origin = CGPointMake(offsetX, offsetY);
+        
+        [self.underCells addObject:cell];
+        [self.frameArray addObject:[[M_CardFrame alloc] initWithaFrame:cell.frame]];
+        
+        //添加拖拽手势
         UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
         panGesture.maximumNumberOfTouches = 1;
         panGesture.minimumNumberOfTouches = 1;
         [cell addGestureRecognizer:panGesture];
         
-        cell.origin = CGPointMake(offsetX, offsetY);
-        cell.width -= i * offsetXSpace * 2;
-        [self.underCells addObject:cell];
-        [self.frameArray addObject:[[M_CardFrame alloc] initWithaFrame:cell.frame]];
-        
+        //初始位置放在屏幕外, 便于做旋转飞入的动画
         cell.x = - cell.height;
         cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
@@ -125,7 +135,7 @@
         self.startCellOrigin = sender.view.origin;
     } else if (sender.state == UIGestureRecognizerStateEnded) {
         CGPoint endPoint = self.startCellOrigin;
-        if (fabs(location.x - self.startPanPoint.x) > DROPDISTANCE) {
+        if (fabs(location.x - self.startPanPoint.x) > DROP_DISTANCE) {
             if ((location.x - self.startPanPoint.x) > 0) {
                 endPoint = CGPointMake(SCRW, self.startCellOrigin.y);
             } else {
@@ -149,20 +159,24 @@
     } else if (sender.state != UIGestureRecognizerStateFailed) {
         sender.view.x = self.startCellOrigin.x + (location.x - self.startPanPoint.x);
         sender.view.y = self.startCellOrigin.y + (location.y - self.startPanPoint.y);
-        CGFloat xPercent = (location.x - self.startPanPoint.x) / DROPDISTANCE;
+        CGFloat xPercent = (location.x - self.startPanPoint.x) / DROP_DISTANCE;
         [curView setSignAlpha:xPercent];
 
-        CGFloat yPercent = (location.y - self.startPanPoint.y) / DROPDISTANCE;
+        CGFloat yPercent = (location.y - self.startPanPoint.y) / DROP_DISTANCE;
         CGFloat sendPercent = fabs(xPercent) > fabs(yPercent) ? fabs(xPercent) : fabs(yPercent);
+        
+        //轻微移动不做缩放操作 绝对值-0.15
+        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+        
         //这里需要发送的是x／y的变化较大者的绝对值
         sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:[NSNumber numberWithFloat:sendPercent]];
-        
         if (xPercent > 0) {
             self.likeButton.layer.borderWidth = 5 * (1 - xPercent);
         } else {
             self.hateButton.layer.borderWidth = 5 * (1 - fabs(xPercent));
         }
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:[NSNumber numberWithFloat:sendPercent]];
     }
 }
 
@@ -194,7 +208,7 @@
 
 - (void)reloadData {
     self.latestItemIndex = 0;
-    _realCardNum = MOSTCARDNUM + 1;
+    _realCardNum = MOST_CARD_NUM + 1;
     if (self.underCells.count) {
         [self reloadCardsContent];
     } else {
@@ -218,7 +232,7 @@
     if ([self.dataSource respondsToSelector:@selector(slideCard:heightForItemAtIndex:)]) {
         return [self.dataSource slideCard:slideCard heightForItemAtIndex:index];
     }
-    return self.height - 180;
+    return self.height - 150;
 }
 
 - (CGFloat)slideCard:(V_SlideCard *)slideCard widthForItemAtIndex:(NSInteger )index {
@@ -257,7 +271,7 @@
 
 - (UIButton *)likeButton {
     if (!_likeButton) {
-        _likeButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.height - _buttonWidth * 2, _buttonWidth, _buttonWidth)];
+        _likeButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
         [_likeButton setBackgroundImage:[UIImage imageNamed:@"likeWhole"] forState:UIControlStateNormal];
         _likeButton.layer.borderColor = [UIColor grayColor].CGColor;
         _likeButton.layer.borderWidth = 5;
@@ -271,7 +285,7 @@
 
 - (UIButton *)hateButton {
     if (!_hateButton) {
-        _hateButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3, self.height - _buttonWidth * 2, _buttonWidth, _buttonWidth)];
+        _hateButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
         [_hateButton setBackgroundImage:[UIImage imageNamed:@"hateWhole"] forState:UIControlStateNormal];
         _hateButton.layer.borderColor = [UIColor grayColor].CGColor;
         _hateButton.layer.borderWidth = 5;
