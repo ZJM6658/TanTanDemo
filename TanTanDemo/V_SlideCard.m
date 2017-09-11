@@ -27,7 +27,7 @@
 
 @implementation V_SlideCard
 
-#pragma mark - LifeCycle
+#pragma mark - life cycle
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
@@ -217,6 +217,7 @@
 }
 
 #pragma mark - V_SlideCardDataSource
+
 - (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index {
     return [self.dataSource slideCard:slideCard itemForIndex:index];
 }
@@ -242,8 +243,8 @@
     return self.width;
 }
 
-
 #pragma mark - setter
+
 - (void)setDataSource:(id<V_SlideCardDataSource>)dataSource {
     _dataSource = dataSource;
     
@@ -255,6 +256,7 @@
 }
 
 #pragma mark - getter
+
 - (NSMutableArray *)frameArray {
     if (!_frameArray) {
         _frameArray = [[NSMutableArray alloc] init];

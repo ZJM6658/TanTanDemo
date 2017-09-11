@@ -13,7 +13,7 @@ typedef NS_ENUM(NSInteger, CardState) {
     FirstCard = 0,
     SecondCard,
     ThirdCard,
-    UnderThirdCard
+    UnderThirdCard,
 };
 
 
