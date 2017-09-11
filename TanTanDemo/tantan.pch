@@ -24,6 +24,7 @@
 
 #define DROP_DISTANCE  100
 #define MOST_CARD_NUM  3
+#define MARGIN_Y  20
 
 #define RESETFRAME      @"resetFrameNotification"
 #define MOVEACTION      @"moveActionNotification"

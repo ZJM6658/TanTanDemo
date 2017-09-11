@@ -19,6 +19,8 @@
 @property (nonatomic, strong) UILabel       *lb_constellation;
 @property (nonatomic, strong) UILabel       *lb_jobOrDistance;
 
+@property (nonatomic) CGPoint       originalCenter;
+
 @end
 
 @implementation V_SlideCardCell
@@ -29,39 +31,112 @@
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
-        self.backgroundColor = [UIColor whiteColor];
-        self.userInteractionEnabled = YES;
-        self.layer.borderColor = RGBA(200, 200, 200, 1).CGColor;
-        self.layer.borderWidth = 1;
-        self.layer.cornerRadius = 5;
-        self.layer.masksToBounds = YES;
-        
-        [self addSubview:self.iv_user];
-        [self addSubview:self.iv_like];
-        [self addSubview:self.iv_hate];
-        
-        [self addSubview:self.lb_name];
-        [self addSubview:self.lb_age];
-        [self addSubview:self.lb_constellation];
-        [self addSubview:self.lb_jobOrDistance];
+        [self initUI];
+        [self setUpConfig];
     }
     return self;
 }
 
+- (void)initUI {
+    self.backgroundColor = [UIColor whiteColor];
+    self.userInteractionEnabled = YES;
+    self.layer.borderColor = RGBA(200, 200, 200, 1).CGColor;
+    self.layer.borderWidth = 1;
+    self.layer.cornerRadius = 5;
+    self.layer.masksToBounds = YES;
+    
+    [self addSubview:self.iv_user];
+    [self addSubview:self.iv_like];
+    [self addSubview:self.iv_hate];
+    
+    [self addSubview:self.lb_name];
+    [self addSubview:self.lb_age];
+    [self addSubview:self.lb_constellation];
+    [self addSubview:self.lb_jobOrDistance];
+}
+
+- (void)setUpConfig {
+    _originalCenter = CGPointMake(-1, -1);
+    //添加拖拽手势
+    UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
+    panGesture.maximumNumberOfTouches = 1;
+    panGesture.minimumNumberOfTouches = 1;
+    [self addGestureRecognizer:panGesture];
+}
+
+- (void)panUserAction:(UIPanGestureRecognizer *)sender {
+    CGPoint center = self.center;
+    //横坐标上、纵坐标上拖动了多少像素
+    CGPoint translation = [sender translationInView:self.superview];
+    sender.view.center = CGPointMake(center.x + translation.x, center.y + translation.y);
+    [sender setTranslation:CGPointZero inView:self.superview];
+    
+    CGPoint newCenter = sender.view.center;
+    if (sender.state == UIGestureRecognizerStateChanged) {
+        CGFloat width = SCRW / 2;
+        CGFloat angle = M_PI_4 / 2 * (width - newCenter.x) / width;
+        CGAffineTransform transform = CGAffineTransformMakeRotation(angle);
+        self.transform = transform;
+        
+        CGFloat PercentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
+        [self setSignAlpha:PercentX];
+        
+        CGFloat PercentY = (newCenter.y - self.originalCenter.y) / DROP_DISTANCE;
+        CGFloat sendPercent = fabs(PercentX) > fabs(PercentY) ? fabs(PercentX) : fabs(PercentY);
+        
+        //轻微移动不做缩放操作 绝对值-0.15
+//        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+        
+        //这里需要发送的是x／y的变化较大者的绝对值
+        sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{@"PercentMain":[NSNumber numberWithFloat:sendPercent], @"PercentX":[NSNumber numberWithFloat:PercentX]}];
+    } else if (sender.state == UIGestureRecognizerStateEnded) {
+        CGPoint endPoint = self.originalCenter;
+        if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
+            if ((newCenter.x - self.originalCenter.x) > 0) {
+                endPoint = CGPointMake(SCRW, self.originalCenter.y);
+            } else {
+                endPoint = CGPointMake(-SCRW, self.originalCenter.y);
+            }
+        }
+        
+#warning  下面这些是不是可以把操作都放在通知里面做？ 然后各个cell动画完了state前进 最好这里只管发通知\
+上面的也同理可以整理一下
+        [UIView animateWithDuration:0.2 animations:^{
+            self.center = endPoint;
+            self.transform = CGAffineTransformMakeRotation(0);
+            [self setSignAlpha:0];
+            if (endPoint.x == self.originalCenter.x) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
+            }
+//            self.likeButton.layer.borderWidth = 5;
+//            self.hateButton.layer.borderWidth = 5;
+        } completion:^(BOOL finished) {
+//            结束后需要做什么事情
+//            if (finished && endPoint.x != self.startCellOrigin.x) {
+//                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:nil];
+//            }
+        }];
+    }
+}
+
 #pragma mark - notification
 
+#warning 这里有点问题啊  底下的cell移动不靠谱
 - (void)moveAction:(NSNotification *)notification {
     if (self.currentState == FirstCard) {
         return;
     }
-    CGFloat curPercent = [notification.object floatValue];
-    V_SlideCard *cardView = (V_SlideCard *)self.superview;
-    M_CardFrame *startframe = [cardView.frameArray objectAtIndex:self.currentState];
-    M_CardFrame *endframe = [cardView.frameArray objectAtIndex:self.currentState - 1];
-    self.x = startframe.x - (startframe.x - endframe.x) * curPercent;
-    self.y = startframe.y - (startframe.y - endframe.y) * curPercent;
-    self.width = startframe.width + (endframe.width - startframe.width) * curPercent;
-    self.height = startframe.height + (endframe.height - startframe.height) * curPercent;
+    NSDictionary *object = notification.object;
+    CGFloat PercentMain = [[object objectForKey:@"PercentMain"] floatValue];
+    NSLog(@"PercentMain == %f", PercentMain);
+    CGFloat scale = 1 - self.currentState * 0.1 + 0.1 * PercentMain;
+    NSLog(@"--scale-----------%f", scale);
+    self.transform = CGAffineTransformMakeScale(scale, scale);
+    CGFloat offsetY = MARGIN_Y * PercentMain;
+    self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+    NSLog(@"--offsetY-----------%f", offsetY);
+    NSLog(@"center==%@", NSStringFromCGPoint(self.center));
 }
 
 - (void)stateChangeAction:(NSNotification *)notification {
@@ -73,9 +148,13 @@
 }
 
 - (void)resetFrame {
-    V_SlideCard *cardView = (V_SlideCard *)self.superview;
-    M_CardFrame *startframe = [cardView.frameArray objectAtIndex:self.currentState];
-    self.frame = CGRectMake(startframe.x, startframe.y, startframe.width, startframe.height);
+    if (self.currentState == FirstCard) {
+        return;
+    }
+    self.center = self.originalCenter;
+    
+    CGFloat scale = 1 - self.currentState * 0.1;
+    self.transform = CGAffineTransformMakeScale(scale, scale);
 }
 
 - (void)shouldDoSomethingWithState:(CardState)state{
@@ -89,13 +168,14 @@
 }
 
 - (void)dealloc {
+    NSLog(@"cell dealloc");
     [self removeAllObserver];
 }
 
 - (void)addAllObserver {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame) name:RESETFRAME object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
 }
 
 - (void)removeAllObserver {
@@ -111,8 +191,19 @@
     self.iv_user.image = _userImage;
 }
 
+- (void)setCenter:(CGPoint)center {
+    [super setCenter:center];
+    if (self.originalCenter.x == -1 && self.originalCenter.y == -1) {
+        self.originalCenter = center;
+    }
+}
+
 - (void)setCurrentState:(CardState)currentState {
     _currentState = currentState;
+    
+    CGFloat scale = 1 - 0.1 * currentState;
+    CGAffineTransform oldTransform = self.transform;
+    self.transform = CGAffineTransformScale(oldTransform, scale, scale);
     self.userInteractionEnabled = currentState == FirstCard;
 }
 

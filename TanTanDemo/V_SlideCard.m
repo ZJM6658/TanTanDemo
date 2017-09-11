@@ -17,9 +17,6 @@
 @property (nonatomic, strong) NSMutableArray<V_SlideCardCell *> *underCells;
 @property (nonatomic)         NSInteger latestItemIndex;
 
-@property (nonatomic)         CGPoint   startPanPoint;
-@property (nonatomic)         CGPoint   startCellOrigin;
-
 @property (nonatomic, strong) UIButton  *likeButton;
 @property (nonatomic, strong) UIButton  *hateButton;
 
@@ -31,13 +28,21 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
-        self.latestItemIndex = 0;
-        _buttonWidth = 60;
-        _realCardNum = MOST_CARD_NUM + 1;
+        [self setUpConfig];
     }
     return self;
 }
 
+- (void)setUpConfig {
+    self.latestItemIndex = 0;
+    _buttonWidth = 60;
+    _realCardNum = MOST_CARD_NUM + 1;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
+
+}
+
+#warning 可以在没有数据了加个loading页面
 - (void)layoutSlideCards {
     CGFloat offsetX = 12;
     CGFloat offsetY = 10;
@@ -61,16 +66,11 @@
         V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellWidth, cellHeight)];
         
 #warning 初始化之后改变frame属性,因为没有约束,cell的放大,子View的frame会有问题！！
-        cell.origin = CGPointMake(offsetX, offsetY);
-        
+//        cell.origin = CGPointMake(offsetX, offsetY);
+#warning 这里y的偏移不应该写死的  应该根据比例来
+        cell.center = CGPointMake(self.center.x, self.center.y - 60 + MARGIN_Y * i);
         [self.underCells addObject:cell];
         [self.frameArray addObject:[[M_CardFrame alloc] initWithaFrame:cell.frame]];
-        
-        //添加拖拽手势
-        UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
-        panGesture.maximumNumberOfTouches = 1;
-        panGesture.minimumNumberOfTouches = 1;
-        [cell addGestureRecognizer:panGesture];
         
         //初始位置放在屏幕外, 便于做旋转飞入的动画
         cell.x = - cell.height;
@@ -107,6 +107,18 @@
     }
 }
 
+#pragma mark - notification
+
+- (void)moveAction:(NSNotification *)notification {
+    NSDictionary *object = notification.object;
+    CGFloat PercentX = [[object objectForKey:@"PercentX"] floatValue];
+    if (PercentX > 0) {
+        self.likeButton.layer.borderWidth = 5 * (1 - PercentX);
+    } else {
+        self.hateButton.layer.borderWidth = 5 * (1 - fabs(PercentX));
+    }
+}
+
 #pragma mark - event response
 - (void)likeOrHateAction:(UIButton *)sender {
     for (UIView *view in self.subviews) {
@@ -122,61 +134,6 @@
 
             }];
         }
-    }
-}
-
-#pragma mark - private methods
-- (void)panUserAction:(UIPanGestureRecognizer *)sender {
-    V_SlideCardCell *curView = (V_SlideCardCell *)sender.view;
-    CGPoint location = [sender locationInView:sender.view.superview];
-
-    if (sender.state == UIGestureRecognizerStateBegan) {
-        self.startPanPoint = location;
-        self.startCellOrigin = sender.view.origin;
-    } else if (sender.state == UIGestureRecognizerStateEnded) {
-        CGPoint endPoint = self.startCellOrigin;
-        if (fabs(location.x - self.startPanPoint.x) > DROP_DISTANCE) {
-            if ((location.x - self.startPanPoint.x) > 0) {
-                endPoint = CGPointMake(SCRW, self.startCellOrigin.y);
-            } else {
-                endPoint = CGPointMake(-SCRW, self.startCellOrigin.y);
-            }
-        }
-        [UIView animateWithDuration:0.3 animations:^{
-            sender.view.origin = endPoint;
-            [curView setSignAlpha:0];
-            if (endPoint.x == self.startCellOrigin.x) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
-            }
-            self.likeButton.layer.borderWidth = 5;
-            self.hateButton.layer.borderWidth = 5;
-        } completion:^(BOOL finished) {
-            //结束后需要做什么事情
-            if (finished && endPoint.x != self.startCellOrigin.x) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:nil];
-            }
-        }];
-    } else if (sender.state != UIGestureRecognizerStateFailed) {
-        sender.view.x = self.startCellOrigin.x + (location.x - self.startPanPoint.x);
-        sender.view.y = self.startCellOrigin.y + (location.y - self.startPanPoint.y);
-        CGFloat xPercent = (location.x - self.startPanPoint.x) / DROP_DISTANCE;
-        [curView setSignAlpha:xPercent];
-
-        CGFloat yPercent = (location.y - self.startPanPoint.y) / DROP_DISTANCE;
-        CGFloat sendPercent = fabs(xPercent) > fabs(yPercent) ? fabs(xPercent) : fabs(yPercent);
-        
-        //轻微移动不做缩放操作 绝对值-0.15
-        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
-        
-        //这里需要发送的是x／y的变化较大者的绝对值
-        sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-        if (xPercent > 0) {
-            self.likeButton.layer.borderWidth = 5 * (1 - xPercent);
-        } else {
-            self.hateButton.layer.borderWidth = 5 * (1 - fabs(xPercent));
-        }
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:[NSNumber numberWithFloat:sendPercent]];
     }
 }
 
