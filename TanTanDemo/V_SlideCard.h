@@ -23,12 +23,9 @@
 
 - (void)loadNewData;
 
+- (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
 - (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index;
 
 @optional
-
-- (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;//default is 4;
-
 - (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index;
-
 @end

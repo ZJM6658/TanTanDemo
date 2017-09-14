@@ -21,12 +21,15 @@ typedef NS_ENUM(NSInteger, CardState) {
 @interface V_SlideCardCell : UIView
 
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
-
-@property (nonatomic, strong) UIImage       *userImage;
-@property (nonatomic, strong) NSString      *userName;
 @property (nonatomic, strong) M_SlideCard   *dataItem;
-@property (nonatomic)         CGFloat       signAlpha;
+
+/** cell当前所处的状态 */
 @property (nonatomic)         CardState     currentState;
+/** cell之间的Y偏移，显示层叠效果*/
+@property (nonatomic)         CGFloat       cellMarginY;
+
+- (void)likeAction;
+- (void)hateAction;
 
 @end
 

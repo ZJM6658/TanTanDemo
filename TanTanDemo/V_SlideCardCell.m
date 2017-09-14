@@ -19,9 +19,10 @@
 @property (nonatomic, strong) UILabel       *lb_constellation;
 @property (nonatomic, strong) UILabel       *lb_jobOrDistance;
 
-@property (nonatomic) CGPoint       originalCenter;
+@property (nonatomic)         CGFloat       signAlpha;
+@property (nonatomic)         CGPoint       originalCenter;
 
-//获取当前实际缩放的state  第三个卡片及以后的缩放比例一样
+//获取当前实际缩放的state  第三个卡片及以后的缩放比例状态值一样
 @property (nonatomic) NSInteger     frameState;
 
 @end
@@ -34,15 +35,14 @@
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
-        [self initUI];
         [self setUpConfig];
+        [self initUI];
     }
     return self;
 }
 
 - (void)initUI {
     self.backgroundColor = [UIColor whiteColor];
-    self.userInteractionEnabled = YES;
     self.layer.borderColor = RGBA(200, 200, 200, 1).CGColor;
     self.layer.borderWidth = 1;
     self.layer.cornerRadius = 5;
@@ -74,42 +74,29 @@
     CGPoint translation = [sender translationInView:self.superview];
     sender.view.center = CGPointMake(center.x + translation.x, center.y + translation.y);
     [sender setTranslation:CGPointZero inView:self.superview];
-    
     CGPoint newCenter = sender.view.center;
+    
     if (sender.state == UIGestureRecognizerStateChanged) {
-        CGFloat width = SCRW / 2;
-        CGFloat angle = M_PI_4 / 2 * (width - newCenter.x) / width;
-        self.transform = CGAffineTransformMakeRotation(angle);
-        
         CGFloat PercentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
-        [self setSignAlpha:PercentX];
-        
         CGFloat PercentY = (newCenter.y - self.originalCenter.y) / DROP_DISTANCE;
-        CGFloat sendPercent = fabs(PercentX) > fabs(PercentY) ? fabs(PercentX) : fabs(PercentY);
-        
-        //轻微移动不做缩放操作 绝对值-0.15
-        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
         
         //这里需要发送的是x／y的变化较大者的绝对值
+        CGFloat sendPercent = fabs(PercentX) > fabs(PercentY) ? fabs(PercentX) : fabs(PercentY);
+        //轻微移动不做缩放操作 绝对值 -0.15
+        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
         sendPercent = sendPercent >= 1 ? 1 : sendPercent;
         [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX]}];
-        
     } else if (sender.state == UIGestureRecognizerStateEnded) {
-        CGPoint endPoint = self.originalCenter;
         if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
+            BOOL choosedLike = YES;
             if ((newCenter.x - self.originalCenter.x) > 0) {
-                endPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
+                choosedLike = YES;
             } else {
-                endPoint = CGPointMake(-SCRW * 2, self.originalCenter.y);
+                choosedLike = NO;
             }
-        }
-        
-#warning  下面这些是不是可以把操作都放在通知里面做？ 然后各个cell动画完了state前进 最好这里只管发通知\
-上面的也同理可以整理一下，各个cell可以有一个标志位表示是否在动画中，重复动画没有必要（可选）
-        if (endPoint.x == self.originalCenter.x) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:@{ENDPOINT:NSStringFromCGPoint(endPoint)}];
+            [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
         } else {
-            [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{ENDPOINT:NSStringFromCGPoint(endPoint)}];
+            [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
         }
     }
 }
@@ -117,6 +104,35 @@
 - (void)dealloc {
     NSLog(@"cell dealloc");
     [self removeAllObserver];
+}
+
+#pragma mark - outside methods
+
+- (void)likeAction {
+    CGPoint toPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
+    self.iv_like.alpha = 1;
+    [UIView animateWithDuration:0.5 animations:^{
+        self.center = toPoint;
+        self.transform = CGAffineTransformMakeRotation(0);
+        [self setSignAlpha:0];
+        self.alpha = 0;
+    } completion:^(BOOL finished) {
+        [self shouldDoSomethingWithState:OtherCard];
+    }];
+    
+}
+
+- (void)hateAction {
+    CGPoint toPoint = CGPointMake(- SCRW * 2, self.originalCenter.y);
+    self.iv_hate.alpha = 1;
+    [UIView animateWithDuration:0.5 animations:^{
+        self.center = toPoint;
+        self.transform = CGAffineTransformMakeRotation(0);
+        self.alpha = 0;
+    } completion:^(BOOL finished) {
+        [self setSignAlpha:0];
+        [self shouldDoSomethingWithState:OtherCard];
+    }];
 }
 
 #pragma mark - notification
@@ -135,32 +151,34 @@
 }
 
 - (void)moveAction:(NSNotification *)notification {
-    if (self.currentState == FirstCard || self.currentState == OtherCard) {
-        return;
-    }
-
+    if (self.currentState == OtherCard) return;//最底下的cell不做相应
     NSDictionary *object = notification.object;
-    CGFloat PercentMain = [[object objectForKey:PERCENTMAIN] floatValue];
+    if (self.currentState == FirstCard) {
+        //当前cell 旋转+按钮alpha改变
+        CGFloat PercentX = [[object objectForKey:PERCENTX] floatValue];
+        CGFloat width = SCRW / 2;
+        CGFloat angle = M_PI_4 / 2 * (width - self.center.x) / width;
+        self.transform = CGAffineTransformMakeRotation(angle);
+        [self setSignAlpha:PercentX];
+    } else {
+        //中间cell 缩放+位移
+        CGFloat PercentMain = [[object objectForKey:PERCENTMAIN] floatValue];
+        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
+        CGFloat offsetY = self.cellMarginY * PercentMain;
 
-    CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
-    self.transform = CGAffineTransformMakeScale(scale, scale);
-
-    CGFloat offsetY = MARGIN_Y * PercentMain;
-    self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+        self.transform = CGAffineTransformMakeScale(scale, scale);
+        self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+    }
 }
 
 - (void)stateChangeAction:(NSNotification *)notification {
     if (self.currentState == FirstCard) {
-        NSString *pointStr = [notification.object objectForKey:ENDPOINT];
-        CGPoint toPoint = CGPointFromString(pointStr);
-        [UIView animateWithDuration:0.5 animations:^{
-            self.center = toPoint;
-            self.transform = CGAffineTransformMakeRotation(0);
-            [self setSignAlpha:0];
-            self.alpha = 0;
-        } completion:^(BOOL finished) {
-            [self shouldDoSomethingWithState:OtherCard];
-        }];
+        BOOL choosedLike = [[notification.object objectForKey:@"RESULT"] boolValue];
+        if (choosedLike) {
+            [self likeAction];
+        } else {
+            [self hateAction];
+        }
     } else {
         [self shouldDoSomethingWithState:self.currentState - 1];
     }
@@ -169,9 +187,7 @@
 - (void)resetFrame:(NSNotification *)notification {
     [UIView animateWithDuration:0.2 animations:^{
         if (self.currentState == FirstCard) {
-            NSString *pointStr = [notification.object objectForKey:ENDPOINT];
-            CGPoint toPoint = CGPointFromString(pointStr);
-            self.center = toPoint;
+            self.center = self.originalCenter;
             self.transform = CGAffineTransformMakeRotation(0);
             [self setSignAlpha:0];
         } else {
@@ -198,24 +214,14 @@
 - (void)setCurrentState:(CardState)currentState {
     NSAssert(self.superview, @"必须先加入父试图,再设置state");
     _currentState = currentState;
-    CGFloat spaceY = MARGIN_Y * self.frameState;
-#warning 这里y的偏移不应该写死, 应该根据比例来, 但是按照什么比例呢？是个问题
+    CGFloat spaceY = self.cellMarginY * self.frameState;
+
     CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y - 60 + spaceY);
     self.originalCenter = currentStateCenter;
     self.center = currentStateCenter;
     CGFloat scale = 1 - TRANSFORM_SPACE * self.frameState;
     self.transform = CGAffineTransformMakeScale(scale, scale);
     self.userInteractionEnabled = (_currentState == FirstCard);
-}
-
-- (void)setUserImage:(UIImage *)userImage {
-    _userImage = userImage;
-    self.iv_user.image = _userImage;
-}
-
-- (void)setUserName:(NSString *)userName {
-    _userName = userName;
-    self.lb_name.text = _userName;
 }
 
 - (void)setSignAlpha:(CGFloat)signAlpha {
@@ -241,14 +247,14 @@
 }
 
 - (UIImageView *)iv_user {
-    if (!_iv_user) {
+    if (_iv_user == nil) {
         _iv_user = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height - 70)];
     }
     return _iv_user;
 }
 
 - (UIImageView *)iv_like {
-    if (!_iv_like) {
+    if (_iv_like == nil) {
         _iv_like = [[UIImageView alloc] initWithFrame:CGRectMake(20, 20, 60, 60)];
         _iv_like.image = [UIImage imageNamed:@"likeLine"];
         _iv_like.alpha = 0;
@@ -257,7 +263,7 @@
 }
 
 - (UIImageView *)iv_hate {
-    if (!_iv_hate) {
+    if (_iv_hate == nil) {
         _iv_hate = [[UIImageView alloc]  initWithFrame:CGRectMake(self.width - 20 - 60, 20, 60, 60)];
         _iv_hate.image = [UIImage imageNamed:@"hateLine"];
         _iv_hate.alpha = 0;
@@ -266,7 +272,7 @@
 }
 
 - (UILabel *)lb_name {
-    if (!_lb_name) {
+    if (_lb_name == nil) {
         _lb_name = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.iv_user.frame), 100, 20)];
         _lb_name.font = [UIFont boldSystemFontOfSize:16];
 
@@ -275,7 +281,7 @@
 }
 
 - (UILabel *)lb_age {
-    if (!_lb_age) {
+    if (_lb_age == nil) {
         _lb_age = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_name.frame), 30, 20)];
         _lb_age.font = [UIFont systemFontOfSize:13];
         _lb_age.textColor = [UIColor redColor];
@@ -285,7 +291,7 @@
 }
 
 - (UILabel *)lb_constellation {
-    if (!_lb_constellation) {
+    if (_lb_constellation == nil) {
         _lb_constellation = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(self.lb_age.frame), CGRectGetMaxY(self.lb_name.frame), 50, 20)];
         _lb_constellation.font = [UIFont systemFontOfSize:11];
 
@@ -294,7 +300,7 @@
 }
 
 - (UILabel *)lb_jobOrDistance {
-    if (!_lb_jobOrDistance) {
+    if (_lb_jobOrDistance == nil) {
         _lb_jobOrDistance = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(self.lb_age.frame), 30, 20)];
         _lb_jobOrDistance.font = [UIFont systemFontOfSize:11];
     }

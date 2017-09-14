@@ -18,8 +18,10 @@
 @property (nonatomic, strong) NSMutableArray<V_SlideCardCell *> *underCells;
 @property (nonatomic)         NSInteger latestItemIndex;
 
-@property (nonatomic, strong) UIButton  *likeButton;
-@property (nonatomic, strong) UIButton  *hateButton;
+@property (nonatomic, strong) UIButton  *btn_like;
+@property (nonatomic, strong) UIButton  *btn_hate;
+
+@property (nonatomic, strong) UIButton  *btn_nodata;
 
 @end
 
@@ -28,8 +30,8 @@
 #pragma mark - life cycle
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
-        self.backgroundColor = [UIColor whiteColor];
         [self setUpConfig];
+        [self initUI];
     }
     return self;
 }
@@ -42,6 +44,16 @@
     [self addAllObserver];
 }
 
+- (void)initUI {
+    self.backgroundColor = [UIColor whiteColor];
+
+    [self addSubview:self.btn_like];
+    [self addSubview:self.btn_hate];
+    [self sendSubviewToBack:self.btn_like];
+    [self sendSubviewToBack:self.btn_hate];
+    [self addSubview:self.btn_nodata];
+}
+
 - (void)dealloc {
     NSLog(@"card dealloc");
     [self removeAllObserver];
@@ -52,37 +64,31 @@
     for (NSInteger i = 0; i < _cardNumber; i ++) {
         CGSize cellSize = [self slideCard:self sizeForItemAtIndex:i];;
         V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
-                
-        cell.dataItem = [self slideCard:self itemForIndex:i];
+        cell.cellMarginY = cellSize.height * TRANSFORM_SPACE - 5;
         cell.delegate = self;
-        cell.hidden = NO;
-        
-        [cell removeFromSuperview];
-        [self addSubview:cell];
-        [self sendSubviewToBack:cell];
-        self.latestItemIndex = i;
         [self.underCells addObject:cell];
         
-        cell.currentState = i;
-
-
-        
         //初始位置放在屏幕外, 便于做旋转飞入的动画
-//        cell.x = - cell.height;
-//        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
+        //        cell.x = - cell.height;
+        //        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
+    [self reloadCardsContent];
 }
 
 - (void)reloadCardsContent {
+    self.btn_nodata.hidden = YES;
+    [self sendSubviewToBack:self.btn_nodata];
+    
     for (NSInteger i = 0; i < self.underCells.count; i ++) {
         V_SlideCardCell *cell = self.underCells[i];
-        cell.dataItem = [self slideCard:self itemForIndex:i];
-        cell.delegate = self;
         [cell removeFromSuperview];
+
         [self addSubview:cell];
         [self sendSubviewToBack:cell];
+        
+        cell.hidden = NO;
+        cell.dataItem = [self slideCard:self itemForIndex:i];
         cell.currentState = i;
-
         self.latestItemIndex = i;
 //        [UIView animateWithDuration:0.3 animations:^{
 //            //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
@@ -110,9 +116,9 @@
     NSDictionary *object = notification.object;
     CGFloat PercentX = [[object objectForKey:PERCENTX] floatValue];
     if (PercentX > 0) {
-        self.likeButton.layer.borderWidth = 5 * (1 - PercentX);
+        self.btn_like.layer.borderWidth = 5 * (1 - PercentX);
     } else {
-        self.hateButton.layer.borderWidth = 5 * (1 - fabs(PercentX));
+        self.btn_hate.layer.borderWidth = 5 * (1 - fabs(PercentX));
     }
 }
 
@@ -126,29 +132,35 @@
 
 - (void)resetButton {
     [UIView animateWithDuration:0.2 animations:^{
-        self.likeButton.layer.borderWidth = 5;
-        self.hateButton.layer.borderWidth = 5;
+        self.btn_like.layer.borderWidth = 5;
+        self.btn_hate.layer.borderWidth = 5;
     }];
 }
 
 #pragma mark - event response
-- (void)likeOrHateAction:(UIButton *)sender {
-    //应该能够标记当前的first cell  不用每次遍历寻找
-    for (UIView *view in self.subviews) {
-        if (![view isKindOfClass:[V_SlideCardCell class]]) {
-            continue;
-        }
-        V_SlideCardCell *cell = (V_SlideCardCell *)view;
-        if (cell.currentState == FirstCard) {
-            [UIView animateWithDuration:0.3 animations:^{
-                cell.center = (sender.tag == 520) ? CGPointMake(SCRW, cell.center.y) : CGPointMake(- SCRW, cell.center.y);
-                cell.alpha = 0;
-            } completion:^(BOOL finished) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:nil];
 
-            }];
-        }
+- (void)likeOrHateAction:(UIButton *)sender {
+    BOOL choosedLike = NO;
+    NSInteger toCenterX = 0;
+    if (sender.tag == 520) {
+        choosedLike = YES;
+        toCenterX = SCRW;
     }
+    
+#warning 点击按钮应该也先动画再改变状态
+    
+//    for (NSInteger i = 0; i < 2000; i ++) {
+//        CGFloat PercentX = (i / 10.0 - self.center.x) / DROP_DISTANCE;
+//        
+//        //这里需要发送的是x／y的变化较大者的绝对值
+//        CGFloat sendPercent = fabs(PercentX);
+//        //轻微移动不做缩放操作 绝对值 -0.15
+//        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+//        sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+//        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX]}];
+//    }
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
 }
 
 #pragma mark - V_SlideCardCellDelegate
@@ -163,14 +175,17 @@
         }];
     } else {
         _showingCardNumber -= 1;
-//        cell.x = -cell.height;
+//        cell.x = - cell.height;
 //        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
     if (_showingCardNumber <= 0) {
+        
+        self.btn_nodata.hidden = NO;
+        [self bringSubviewToFront:self.btn_nodata];
         //协议方法
-        if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
-            [self.dataSource loadNewData];
-        }
+//        if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
+//            [self.dataSource loadNewData];
+//        }
         
         //主动刷新
         //[self reloadData];
@@ -202,7 +217,7 @@
     if ([self.dataSource respondsToSelector:@selector(numberOfItemsInSlideCard:)]) {
         return [self.dataSource numberOfItemsInSlideCard:slideCard];
     }
-    return 4;
+    return _cardNumber;
 }
 
 - (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
@@ -216,49 +231,59 @@
 
 - (void)setDataSource:(id<V_SlideCardDataSource>)dataSource {
     _dataSource = dataSource;
-    
     [self layoutSlideCards];
-    [self addSubview:self.likeButton];
-    [self addSubview:self.hateButton];
-    [self sendSubviewToBack:self.likeButton];
-    [self sendSubviewToBack:self.hateButton];
 }
 
 #pragma mark - getter
 
 - (NSMutableArray<V_SlideCardCell *> *)underCells {
-    if (!_underCells) {
+    if (_underCells == nil) {
         _underCells = [[NSMutableArray alloc] init];
     }
     return _underCells;
 }
 
-- (UIButton *)likeButton {
-    if (!_likeButton) {
-        _likeButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
-        [_likeButton setBackgroundImage:[UIImage imageNamed:@"likeWhole"] forState:UIControlStateNormal];
-        _likeButton.layer.borderColor = [UIColor grayColor].CGColor;
-        _likeButton.layer.borderWidth = 5;
-        _likeButton.layer.masksToBounds = YES;
-        _likeButton.layer.cornerRadius = _buttonWidth / 2;
-        _likeButton.tag = 520;
-        [_likeButton addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
+- (UIButton *)btn_like {
+    if (_btn_like == nil) {
+        _btn_like = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
+        [_btn_like setBackgroundImage:[UIImage imageNamed:@"likeWhole"] forState:UIControlStateNormal];
+        _btn_like.layer.borderColor = [UIColor grayColor].CGColor;
+        _btn_like.layer.borderWidth = 5;
+        _btn_like.layer.masksToBounds = YES;
+        _btn_like.layer.cornerRadius = _buttonWidth / 2;
+        _btn_like.tag = 520;
+        [_btn_like addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
     }
-    return _likeButton;
+    return _btn_like;
 }
 
-- (UIButton *)hateButton {
-    if (!_hateButton) {
-        _hateButton = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
-        [_hateButton setBackgroundImage:[UIImage imageNamed:@"hateWhole"] forState:UIControlStateNormal];
-        _hateButton.layer.borderColor = [UIColor grayColor].CGColor;
-        _hateButton.layer.borderWidth = 5;
-        _hateButton.layer.masksToBounds = YES;
-        _hateButton.layer.cornerRadius = _buttonWidth / 2;
-        _hateButton.tag = 521;
-        [_hateButton addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
+- (UIButton *)btn_hate {
+    if (_btn_hate == nil) {
+        _btn_hate = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
+        [_btn_hate setBackgroundImage:[UIImage imageNamed:@"hateWhole"] forState:UIControlStateNormal];
+        _btn_hate.layer.borderColor = [UIColor grayColor].CGColor;
+        _btn_hate.layer.borderWidth = 5;
+        _btn_hate.layer.masksToBounds = YES;
+        _btn_hate.layer.cornerRadius = _buttonWidth / 2;
+        _btn_hate.tag = 521;
+        [_btn_hate addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
     }
-    return _hateButton;
+    return _btn_hate;
+}
+
+- (UIButton *)btn_nodata {
+    if (_btn_nodata == nil) {
+        _btn_nodata = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, 60)];
+        _btn_nodata.center = self.center;
+        [_btn_nodata setTitle:@"没有更多数据了\n点击加载下一页" forState:UIControlStateNormal];
+        _btn_nodata.titleLabel.numberOfLines = 0;
+        [_btn_nodata setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_btn_nodata setBackgroundColor:[UIColor colorWithRed:220.0/255.0 green:100.0/255.0 blue:50.0/255.0 alpha:1]];
+        _btn_nodata.layer.cornerRadius = 5;
+        _btn_nodata.layer.masksToBounds = YES;
+        _btn_nodata.hidden = YES;
+    }
+    return _btn_nodata;
 }
 
 @end

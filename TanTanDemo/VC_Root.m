@@ -68,7 +68,7 @@
 #pragma mark - getter
 
 - (NSMutableArray *)listData {
-    if (!_listData) {
+    if (_listData == nil) {
         _listData = [[NSMutableArray alloc] init];
         
         _listData = [[self getDataSourceWithPageNo:0] copy];
@@ -98,7 +98,7 @@
 }
 
 - (V_SlideCard *)slideCard {
-    if (!_slideCard) {
+    if (_slideCard == nil) {
         _slideCard = [[V_SlideCard alloc] initWithFrame:self.view.bounds];
         _slideCard.dataSource = self;
     }
