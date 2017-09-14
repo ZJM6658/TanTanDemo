@@ -7,9 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "V_SlideCard.h"
-#import "M_SlideCard.h"
 
-@interface VC_Root : UIViewController<V_SlideCardDataSource>
+@interface VC_Root : UIViewController
 
 @end

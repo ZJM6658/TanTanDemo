@@ -56,6 +56,8 @@
 }
 
 - (void)setUpConfig {
+    [self addAllObserver];
+    
     _originalCenter = CGPointMake(-1, -1);
     //添加拖拽手势
     UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
@@ -89,81 +91,25 @@
         
         //这里需要发送的是x／y的变化较大者的绝对值
         sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{@"PercentMain":[NSNumber numberWithFloat:sendPercent], @"PercentX":[NSNumber numberWithFloat:PercentX]}];
+        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX]}];
+        
     } else if (sender.state == UIGestureRecognizerStateEnded) {
         CGPoint endPoint = self.originalCenter;
         if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
             if ((newCenter.x - self.originalCenter.x) > 0) {
-                endPoint = CGPointMake(SCRW, self.originalCenter.y);
+                endPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
             } else {
-                endPoint = CGPointMake(-SCRW, self.originalCenter.y);
+                endPoint = CGPointMake(-SCRW * 2, self.originalCenter.y);
             }
         }
         
 #warning  下面这些是不是可以把操作都放在通知里面做？ 然后各个cell动画完了state前进 最好这里只管发通知\
-上面的也同理可以整理一下
-        [UIView animateWithDuration:0.2 animations:^{
-            self.center = endPoint;
-            self.transform = CGAffineTransformMakeRotation(0);
-            [self setSignAlpha:0];
-            if (endPoint.x == self.originalCenter.x) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
-            }
-//            self.likeButton.layer.borderWidth = 5;
-//            self.hateButton.layer.borderWidth = 5;
-        } completion:^(BOOL finished) {
-//            结束后需要做什么事情
-//            if (finished && endPoint.x != self.startCellOrigin.x) {
-//                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:nil];
-//            }
-        }];
-    }
-}
-
-#pragma mark - notification
-
-#warning 这里有点问题啊  底下的cell移动不靠谱
-- (void)moveAction:(NSNotification *)notification {
-    if (self.currentState == FirstCard) {
-        return;
-    }
-    NSDictionary *object = notification.object;
-    CGFloat PercentMain = [[object objectForKey:@"PercentMain"] floatValue];
-    NSLog(@"PercentMain == %f", PercentMain);
-    CGFloat scale = 1 - self.currentState * 0.1 + 0.1 * PercentMain;
-    NSLog(@"--scale-----------%f", scale);
-    self.transform = CGAffineTransformMakeScale(scale, scale);
-    CGFloat offsetY = MARGIN_Y * PercentMain;
-    self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
-    NSLog(@"--offsetY-----------%f", offsetY);
-    NSLog(@"center==%@", NSStringFromCGPoint(self.center));
-}
-
-- (void)stateChangeAction:(NSNotification *)notification {
-    if (self.currentState == FirstCard) {
-        [self shouldDoSomethingWithState:UnderThirdCard];
-    } else {
-        [self shouldDoSomethingWithState:self.currentState - 1];
-    }
-}
-
-- (void)resetFrame {
-    if (self.currentState == FirstCard) {
-        return;
-    }
-    self.center = self.originalCenter;
-    
-    CGFloat scale = 1 - self.currentState * 0.1;
-    self.transform = CGAffineTransformMakeScale(scale, scale);
-}
-
-- (void)shouldDoSomethingWithState:(CardState)state{
-    self.currentState = state;
-    V_SlideCard *cardView = (V_SlideCard *)self.superview;
-    M_CardFrame *startframe = [cardView.frameArray objectAtIndex:self.currentState];
-    self.frame = CGRectMake(startframe.x, startframe.y, startframe.width, startframe.height);
-    if (self.currentState == UnderThirdCard) {
-        [cardView reloadDataWithUnderCell:self];
+上面的也同理可以整理一下，各个cell可以有一个标志位表示是否在动画中，重复动画没有必要（可选）
+        if (endPoint.x == self.originalCenter.x) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:@{ENDPOINT:NSStringFromCGPoint(endPoint)}];
+        } else {
+            [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{ENDPOINT:NSStringFromCGPoint(endPoint)}];
+        }
     }
 }
 
@@ -172,16 +118,86 @@
     [self removeAllObserver];
 }
 
+#pragma mark - notification
+
 - (void)addAllObserver {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame) name:RESETFRAME object:nil];
-//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
 }
 
 - (void)removeAllObserver {
     NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
     for (NSString *nameStr in notificationNames) {
         [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
+    }
+}
+
+//#warning 这里有点问题啊  底下的cell移动不靠谱
+- (void)moveAction:(NSNotification *)notification {
+    if (self.currentState == FirstCard) {
+        return;
+    }
+    NSLog(@"%p | frame == %@", self,NSStringFromCGRect(self.frame));
+
+    NSDictionary *object = notification.object;
+    CGFloat PercentMain = [[object objectForKey:PERCENTMAIN] floatValue];
+//    NSLog(@"PercentMain == %f", PercentMain);
+    CGFloat scale = 1 + 0.1 * PercentMain;//- self.currentState * 0.1
+//    NSLog(@"--scale-----------%f", scale);
+    self.transform = CGAffineTransformIdentity;
+//    self.transform = CGAffineTransformMakeScale(scale, scale);
+//    CGFloat scale = 1 - 0.1 * currentState;
+    CGAffineTransform oldTransform = self.transform;
+    self.transform = CGAffineTransformScale(oldTransform, scale, scale);
+    
+    CGFloat offsetY = MARGIN_Y * PercentMain;
+    self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+//    NSLog(@"--offsetY-----------%f", offsetY);
+//    NSLog(@"center==%@", NSStringFromCGPoint(self.center));
+}
+
+- (void)stateChangeAction:(NSNotification *)notification {
+    if (self.currentState == FirstCard) {
+        NSString *pointStr = [notification.object objectForKey:ENDPOINT];
+        CGPoint toPoint = CGPointFromString(pointStr);
+        [UIView animateWithDuration:0.5 animations:^{
+            self.center = toPoint;
+            self.transform = CGAffineTransformMakeRotation(0);
+            [self setSignAlpha:0];
+        } completion:^(BOOL finished) {
+            [self shouldDoSomethingWithState:UnderThirdCard];
+        }];
+    } else {
+        [self shouldDoSomethingWithState:self.currentState - 1];
+    }
+}
+
+- (void)resetFrame:(NSNotification *)notification {
+    if (self.currentState == FirstCard) {
+        NSString *pointStr = [notification.object objectForKey:ENDPOINT];
+        CGPoint toPoint = CGPointFromString(pointStr);
+        [UIView animateWithDuration:0.2 animations:^{
+            self.center = toPoint;
+            self.transform = CGAffineTransformMakeRotation(0);
+            [self setSignAlpha:0];
+        }];
+    } else {
+        self.center = self.originalCenter;
+        self.transform = CGAffineTransformIdentity;
+        
+        //    CGFloat scale = 1 - self.currentState * 0.1;
+        //    self.transform = CGAffineTransformMakeScale(scale, scale);
+    }
+}
+
+- (void)shouldDoSomethingWithState:(CardState)state{
+    self.currentState = state;
+
+    if (self.currentState == UnderThirdCard) {
+        if ([self.delegate respondsToSelector:@selector(loadNewData:)]) {
+            [self.delegate loadNewData:self];
+        }
     }
 }
 
@@ -195,6 +211,7 @@
     [super setCenter:center];
     if (self.originalCenter.x == -1 && self.originalCenter.y == -1) {
         self.originalCenter = center;
+        NSLog(@"originalCenter = %@", NSStringFromCGPoint(center));
     }
 }
 

@@ -8,7 +8,7 @@
 
 #import "V_SlideCard.h"
 
-@interface V_SlideCard () {
+@interface V_SlideCard () <V_SlideCardCellDelegate> {
     CGFloat _buttonWidth;
     CGFloat _realCardNum;
 }
@@ -37,9 +37,12 @@
     self.latestItemIndex = 0;
     _buttonWidth = 60;
     _realCardNum = MOST_CARD_NUM + 1;
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
+    [self addAllObserver];
+}
 
+- (void)dealloc {
+    NSLog(@"card dealloc");
+    [self removeAllObserver];
 }
 
 #warning 可以在没有数据了加个loading页面
@@ -70,11 +73,10 @@
 #warning 这里y的偏移不应该写死的  应该根据比例来
         cell.center = CGPointMake(self.center.x, self.center.y - 60 + MARGIN_Y * i);
         [self.underCells addObject:cell];
-        [self.frameArray addObject:[[M_CardFrame alloc] initWithaFrame:cell.frame]];
         
         //初始位置放在屏幕外, 便于做旋转飞入的动画
-        cell.x = - cell.height;
-        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
+//        cell.x = - cell.height;
+//        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
     [self reloadCardsContent];
 }
@@ -84,7 +86,7 @@
         V_SlideCardCell *cell = self.underCells[i];
         cell.dataItem = [self slideCard:self itemForIndex:i];
         cell.currentState = i;
-        [cell addAllObserver];
+        cell.delegate = self;
         cell.hidden = NO;
 
         [cell removeFromSuperview];
@@ -95,23 +97,28 @@
         [UIView animateWithDuration:0.3 animations:^{
             //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
             cell.transform = CGAffineTransformMakeRotation((0.0f * M_PI) / 180.0f);
-
-            CGRect oldFrame = cell.frame;
-            M_CardFrame *frame = self.frameArray[i];
-            oldFrame.origin.x = frame.x;
-            oldFrame.origin.y = frame.y;
-            oldFrame.size.width = frame.width;
-            oldFrame.size.height = frame.height;
-            cell.frame = oldFrame;
         }];
     }
 }
 
 #pragma mark - notification
 
+- (void)addAllObserver {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
+}
+
+- (void)removeAllObserver {
+    NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
+    for (NSString *nameStr in notificationNames) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
+    }
+}
+
 - (void)moveAction:(NSNotification *)notification {
     NSDictionary *object = notification.object;
-    CGFloat PercentX = [[object objectForKey:@"PercentX"] floatValue];
+    CGFloat PercentX = [[object objectForKey:PERCENTX] floatValue];
     if (PercentX > 0) {
         self.likeButton.layer.borderWidth = 5 * (1 - PercentX);
     } else {
@@ -119,8 +126,24 @@
     }
 }
 
+- (void)resetFrame:(NSNotification *)notification {
+    [self resetButton];
+}
+
+- (void)stateChangeAction:(NSNotification *)notification {
+    [self resetButton];
+}
+
+- (void)resetButton {
+    [UIView animateWithDuration:0.2 animations:^{
+        self.likeButton.layer.borderWidth = 5;
+        self.hateButton.layer.borderWidth = 5;
+    }];
+}
+
 #pragma mark - event response
 - (void)likeOrHateAction:(UIButton *)sender {
+    //应该能够标记当前的first cell  不用每次遍历寻找
     for (UIView *view in self.subviews) {
         if (![view isKindOfClass:[V_SlideCardCell class]]) {
             continue;
@@ -128,7 +151,8 @@
         V_SlideCardCell *cell = (V_SlideCardCell *)view;
         if (cell.currentState == FirstCard) {
             [UIView animateWithDuration:0.3 animations:^{
-                cell.x = sender.tag == 520 ? SCRW : -SCRW;
+                cell.center = (sender.tag == 520) ? CGPointMake(SCRW, cell.center.y) : CGPointMake(- SCRW, cell.center.y);
+                cell.alpha = 0;
             } completion:^(BOOL finished) {
                 [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:nil];
 
@@ -137,17 +161,20 @@
     }
 }
 
-#pragma mark - outside methods
-- (void)reloadDataWithUnderCell:(V_SlideCardCell *)cell {
+#pragma mark - V_SlideCardCellDelegate
+
+- (void)loadNewData:(V_SlideCardCell *)cell {
     if (self.latestItemIndex + 1 < [self numberOfItemsInSlideCard:self]) {
         self.latestItemIndex += 1;
         [self sendSubviewToBack:cell];
         cell.dataItem = [self slideCard:self itemForIndex:self.latestItemIndex];
+        [UIView animateWithDuration:0.3 animations:^{
+            cell.alpha = 1;
+        }];
     } else {
-        [cell removeAllObserver];
         _realCardNum -= 1;
-        cell.x = -cell.height;
-        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
+//        cell.x = -cell.height;
+//        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
     if (!_realCardNum) {
         //协议方法
@@ -159,9 +186,11 @@
         //[self reloadData];
         
         //提示
-//        [[[UIAlertView alloc] initWithTitle:@"没有更多数据了" message:@"请实现加载下一页方法" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil] show];
+        //        [[[UIAlertView alloc] initWithTitle:@"没有更多数据了" message:@"请实现加载下一页方法" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil] show];
     }
 }
+
+#pragma mark - outside methods
 
 - (void)reloadData {
     self.latestItemIndex = 0;
@@ -213,13 +242,6 @@
 }
 
 #pragma mark - getter
-
-- (NSMutableArray *)frameArray {
-    if (!_frameArray) {
-        _frameArray = [[NSMutableArray alloc] init];
-    }
-    return _frameArray;
-}
 
 - (NSMutableArray<V_SlideCardCell *> *)underCells {
     if (!_underCells) {

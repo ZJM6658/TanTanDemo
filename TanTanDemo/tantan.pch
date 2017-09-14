@@ -19,9 +19,6 @@
 #define SCRW        [[UIScreen mainScreen] bounds].size.width
 #define SCRH        [[UIScreen mainScreen] bounds].size.height
 
-#define SVIEW_W     self.view.bounds.size.width
-#define SVIEW_H     self.view.bounds.size.height
-
 #define DROP_DISTANCE  100
 #define MOST_CARD_NUM  3
 #define MARGIN_Y  20
@@ -29,6 +26,11 @@
 #define RESETFRAME      @"resetFrameNotification"
 #define MOVEACTION      @"moveActionNotification"
 #define STATECHANGE     @"stateChangeNotification"
+
+#define ENDPOINT        @"EndPoint"
+#define PERCENTMAIN     @"PercentMain"
+#define PERCENTX        @"PercentX"
+
 
 #define RGBA(r,g,b,a)     [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:a]
 
