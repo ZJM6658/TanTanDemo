@@ -21,6 +21,9 @@
 
 @property (nonatomic) CGPoint       originalCenter;
 
+//获取当前实际缩放的state  第三个卡片及以后的缩放比例一样
+@property (nonatomic) NSInteger     frameState;
+
 @end
 
 @implementation V_SlideCardCell
@@ -56,14 +59,13 @@
 }
 
 - (void)setUpConfig {
-    [self addAllObserver];
-    
-    _originalCenter = CGPointMake(-1, -1);
     //添加拖拽手势
     UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
     panGesture.maximumNumberOfTouches = 1;
     panGesture.minimumNumberOfTouches = 1;
     [self addGestureRecognizer:panGesture];
+    
+    [self addAllObserver];
 }
 
 - (void)panUserAction:(UIPanGestureRecognizer *)sender {
@@ -77,8 +79,7 @@
     if (sender.state == UIGestureRecognizerStateChanged) {
         CGFloat width = SCRW / 2;
         CGFloat angle = M_PI_4 / 2 * (width - newCenter.x) / width;
-        CGAffineTransform transform = CGAffineTransformMakeRotation(angle);
-        self.transform = transform;
+        self.transform = CGAffineTransformMakeRotation(angle);
         
         CGFloat PercentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
         [self setSignAlpha:PercentX];
@@ -87,7 +88,7 @@
         CGFloat sendPercent = fabs(PercentX) > fabs(PercentY) ? fabs(PercentX) : fabs(PercentY);
         
         //轻微移动不做缩放操作 绝对值-0.15
-//        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
         
         //这里需要发送的是x／y的变化较大者的绝对值
         sendPercent = sendPercent >= 1 ? 1 : sendPercent;
@@ -133,28 +134,19 @@
     }
 }
 
-//#warning 这里有点问题啊  底下的cell移动不靠谱
 - (void)moveAction:(NSNotification *)notification {
-    if (self.currentState == FirstCard) {
+    if (self.currentState == FirstCard || self.currentState == OtherCard) {
         return;
     }
-    NSLog(@"%p | frame == %@", self,NSStringFromCGRect(self.frame));
 
     NSDictionary *object = notification.object;
     CGFloat PercentMain = [[object objectForKey:PERCENTMAIN] floatValue];
-//    NSLog(@"PercentMain == %f", PercentMain);
-    CGFloat scale = 1 + 0.1 * PercentMain;//- self.currentState * 0.1
-//    NSLog(@"--scale-----------%f", scale);
-    self.transform = CGAffineTransformIdentity;
-//    self.transform = CGAffineTransformMakeScale(scale, scale);
-//    CGFloat scale = 1 - 0.1 * currentState;
-    CGAffineTransform oldTransform = self.transform;
-    self.transform = CGAffineTransformScale(oldTransform, scale, scale);
-    
+
+    CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
+    self.transform = CGAffineTransformMakeScale(scale, scale);
+
     CGFloat offsetY = MARGIN_Y * PercentMain;
     self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
-//    NSLog(@"--offsetY-----------%f", offsetY);
-//    NSLog(@"center==%@", NSStringFromCGPoint(self.center));
 }
 
 - (void)stateChangeAction:(NSNotification *)notification {
@@ -165,8 +157,9 @@
             self.center = toPoint;
             self.transform = CGAffineTransformMakeRotation(0);
             [self setSignAlpha:0];
+            self.alpha = 0;
         } completion:^(BOOL finished) {
-            [self shouldDoSomethingWithState:UnderThirdCard];
+            [self shouldDoSomethingWithState:OtherCard];
         }];
     } else {
         [self shouldDoSomethingWithState:self.currentState - 1];
@@ -174,27 +167,25 @@
 }
 
 - (void)resetFrame:(NSNotification *)notification {
-    if (self.currentState == FirstCard) {
-        NSString *pointStr = [notification.object objectForKey:ENDPOINT];
-        CGPoint toPoint = CGPointFromString(pointStr);
-        [UIView animateWithDuration:0.2 animations:^{
+    [UIView animateWithDuration:0.2 animations:^{
+        if (self.currentState == FirstCard) {
+            NSString *pointStr = [notification.object objectForKey:ENDPOINT];
+            CGPoint toPoint = CGPointFromString(pointStr);
             self.center = toPoint;
             self.transform = CGAffineTransformMakeRotation(0);
             [self setSignAlpha:0];
-        }];
-    } else {
-        self.center = self.originalCenter;
-        self.transform = CGAffineTransformIdentity;
-        
-        //    CGFloat scale = 1 - self.currentState * 0.1;
-        //    self.transform = CGAffineTransformMakeScale(scale, scale);
-    }
+        } else {
+            self.center = self.originalCenter;
+            CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE;
+            self.transform = CGAffineTransformMakeScale(scale, scale);
+        }
+    }];
 }
 
-- (void)shouldDoSomethingWithState:(CardState)state{
+- (void)shouldDoSomethingWithState:(CardState)state {
     self.currentState = state;
 
-    if (self.currentState == UnderThirdCard) {
+    if (self.currentState == OtherCard) {
         if ([self.delegate respondsToSelector:@selector(loadNewData:)]) {
             [self.delegate loadNewData:self];
         }
@@ -202,26 +193,24 @@
 }
 
 #pragma mark - setter
+
+/** 每次重新设置state时，originalCenter和transform需要设置为当前state的值*/
+- (void)setCurrentState:(CardState)currentState {
+    NSAssert(self.superview, @"必须先加入父试图,再设置state");
+    _currentState = currentState;
+    CGFloat spaceY = MARGIN_Y * self.frameState;
+#warning 这里y的偏移不应该写死, 应该根据比例来, 但是按照什么比例呢？是个问题
+    CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y - 60 + spaceY);
+    self.originalCenter = currentStateCenter;
+    self.center = currentStateCenter;
+    CGFloat scale = 1 - TRANSFORM_SPACE * self.frameState;
+    self.transform = CGAffineTransformMakeScale(scale, scale);
+    self.userInteractionEnabled = (_currentState == FirstCard);
+}
+
 - (void)setUserImage:(UIImage *)userImage {
     _userImage = userImage;
     self.iv_user.image = _userImage;
-}
-
-- (void)setCenter:(CGPoint)center {
-    [super setCenter:center];
-    if (self.originalCenter.x == -1 && self.originalCenter.y == -1) {
-        self.originalCenter = center;
-        NSLog(@"originalCenter = %@", NSStringFromCGPoint(center));
-    }
-}
-
-- (void)setCurrentState:(CardState)currentState {
-    _currentState = currentState;
-    
-    CGFloat scale = 1 - 0.1 * currentState;
-    CGAffineTransform oldTransform = self.transform;
-    self.transform = CGAffineTransformScale(oldTransform, scale, scale);
-    self.userInteractionEnabled = currentState == FirstCard;
 }
 
 - (void)setUserName:(NSString *)userName {
@@ -244,6 +233,13 @@
 }
 
 #pragma mark - getter
+
+- (NSInteger)frameState {
+    NSInteger state = self.currentState;
+    if (state > 2) state = 2;
+    return state;
+}
+
 - (UIImageView *)iv_user {
     if (!_iv_user) {
         _iv_user = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height - 70)];

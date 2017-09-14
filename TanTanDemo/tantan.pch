@@ -20,8 +20,9 @@
 #define SCRH        [[UIScreen mainScreen] bounds].size.height
 
 #define DROP_DISTANCE  100
-#define MOST_CARD_NUM  3
-#define MARGIN_Y  20
+
+#define TRANSFORM_SPACE  0.1
+#define MARGIN_Y  40
 
 #define RESETFRAME      @"resetFrameNotification"
 #define MOVEACTION      @"moveActionNotification"

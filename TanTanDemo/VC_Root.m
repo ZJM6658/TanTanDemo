@@ -41,6 +41,12 @@
 
 #pragma mark - V_SlideCardDataSource
 
+- (void)loadNewData {
+    _pageNo ++;
+    self.listData = [self getDataSourceWithPageNo:_pageNo];
+    [self.slideCard reloadData];
+}
+
 - (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index {
     M_SlideCard *item = [self.listData objectAtIndex:index];
     return item;
@@ -50,10 +56,8 @@
     return self.listData.count;
 }
 
-- (void)loadNewData {
-    _pageNo ++;
-    self.listData = [self getDataSourceWithPageNo:_pageNo];
-    [self.slideCard reloadData];
+- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
+    return CGSizeMake(300, 400);
 }
 
 #pragma mark - private methods

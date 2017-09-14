@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E3123AE91DDDF9B800ABC515 /* M_CardFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */; };
 		E36F709E1DDB45DE004B9889 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F709D1DDB45DE004B9889 /* main.m */; };
 		E36F70A11DDB45DE004B9889 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70A01DDB45DE004B9889 /* AppDelegate.m */; };
 		E36F70A91DDB45DE004B9889 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36F70A81DDB45DE004B9889 /* Assets.xcassets */; };
@@ -39,8 +38,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E3123AE71DDDF9B800ABC515 /* M_CardFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = M_CardFrame.h; sourceTree = "<group>"; };
-		E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = M_CardFrame.m; sourceTree = "<group>"; };
 		E36F70991DDB45DE004B9889 /* TanTanDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TanTanDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36F709D1DDB45DE004B9889 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		E36F709F1DDB45DE004B9889 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -123,8 +120,6 @@
 				E36F70D01DDB461C004B9889 /* VC_Root.m */,
 				E3758D781DDC501700CA90DE /* M_SlideCard.h */,
 				E3758D791DDC501700CA90DE /* M_SlideCard.m */,
-				E3123AE71DDDF9B800ABC515 /* M_CardFrame.h */,
-				E3123AE81DDDF9B800ABC515 /* M_CardFrame.m */,
 				E3758D6E1DDBF6DA00CA90DE /* V_SlideCard.h */,
 				E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */,
 				E3758D711DDBFD7600CA90DE /* V_SlideCardCell.h */,
@@ -297,7 +292,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E3758D771DDC3AC800CA90DE /* UIView+Extension.m in Sources */,
-				E3123AE91DDDF9B800ABC515 /* M_CardFrame.m in Sources */,
 				E3758D701DDBF6DA00CA90DE /* V_SlideCard.m in Sources */,
 				E3758D7A1DDC501700CA90DE /* M_SlideCard.m in Sources */,
 				E36F70D11DDB461C004B9889 /* VC_Root.m in Sources */,

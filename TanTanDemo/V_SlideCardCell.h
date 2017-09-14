@@ -13,18 +13,14 @@ typedef NS_ENUM(NSInteger, CardState) {
     FirstCard = 0,
     SecondCard,
     ThirdCard,
-    UnderThirdCard,
+    OtherCard,
 };
 
-@class V_SlideCardCell;
-
-@protocol V_SlideCardCellDelegate <NSObject>
-- (void)loadNewData:(V_SlideCardCell *)cell;
-@end
+@protocol V_SlideCardCellDelegate;
 
 @interface V_SlideCardCell : UIView
 
-@property (nonatomic, weak) id<V_SlideCardCellDelegate> delegate;
+@property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
 
 @property (nonatomic, strong) UIImage       *userImage;
 @property (nonatomic, strong) NSString      *userName;
@@ -32,6 +28,10 @@ typedef NS_ENUM(NSInteger, CardState) {
 @property (nonatomic)         CGFloat       signAlpha;
 @property (nonatomic)         CardState     currentState;
 
-- (void)shouldDoSomethingWithState:(CardState)state;
+@end
+
+@protocol V_SlideCardCellDelegate <NSObject>
+
+- (void)loadNewData:(V_SlideCardCell *)cell;
 
 @end

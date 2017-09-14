@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import "V_SlideCardCell.h"
-#import "M_CardFrame.h"
 
 @protocol V_SlideCardDataSource;
 
@@ -27,8 +26,9 @@
 - (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index;
 
 @optional
-- (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;//default is 3;
-- (CGFloat)slideCard:(V_SlideCard *)slideCard heightForItemAtIndex:(NSInteger)index;//default is 'self.height - 180'
-- (CGFloat)slideCard:(V_SlideCard *)slideCard widthForItemAtIndex:(NSInteger)index;//default is 'self.width - 20'
+
+- (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;//default is 4;
+
+- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index;
 
 @end

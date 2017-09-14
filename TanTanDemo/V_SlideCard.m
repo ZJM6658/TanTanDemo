@@ -10,7 +10,8 @@
 
 @interface V_SlideCard () <V_SlideCardCellDelegate> {
     CGFloat _buttonWidth;
-    CGFloat _realCardNum;
+    CGFloat _cardNumber;//创建的cell数量
+    CGFloat _showingCardNumber;
 }
 
 @property (nonatomic, strong) V_SlideCardCell                   *topCell;
@@ -36,7 +37,8 @@
 - (void)setUpConfig {
     self.latestItemIndex = 0;
     _buttonWidth = 60;
-    _realCardNum = MOST_CARD_NUM + 1;
+    _cardNumber = 4;
+    _showingCardNumber = _cardNumber;
     [self addAllObserver];
 }
 
@@ -47,57 +49,45 @@
 
 #warning 可以在没有数据了加个loading页面
 - (void)layoutSlideCards {
-    CGFloat offsetX = 12;
-    CGFloat offsetY = 10;
-    CGFloat cardXSpace = 14 / (MOST_CARD_NUM - 1);
-    CGFloat cardYSpace = 2 * offsetY;
-    CGFloat cardHeightSpace = 10;
-
-    NSInteger cardNum = [self numberOfItemsInSlideCard:self] > _realCardNum ? _realCardNum : [self numberOfItemsInSlideCard:self];
-    
-    
-    for (NSInteger i = 0; i < cardNum; i ++) {
-        if (i < MOST_CARD_NUM && i > 0) {
-            offsetX += cardXSpace;
-            offsetY += cardYSpace;
-            offsetY += cardHeightSpace / MOST_CARD_NUM * (MOST_CARD_NUM - i);
-        }
-
-        CGFloat cellWidth = [self slideCard:self widthForItemAtIndex:i] - 2 * offsetX;
-        CGFloat cellHeight = [self slideCard:self heightForItemAtIndex:i] - cardYSpace * i;
+    for (NSInteger i = 0; i < _cardNumber; i ++) {
+        CGSize cellSize = [self slideCard:self sizeForItemAtIndex:i];;
+        V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
+                
+        cell.dataItem = [self slideCard:self itemForIndex:i];
+        cell.delegate = self;
+        cell.hidden = NO;
         
-        V_SlideCardCell *cell = [[V_SlideCardCell alloc] initWithFrame:CGRectMake(0, 0, cellWidth, cellHeight)];
-        
-#warning 初始化之后改变frame属性,因为没有约束,cell的放大,子View的frame会有问题！！
-//        cell.origin = CGPointMake(offsetX, offsetY);
-#warning 这里y的偏移不应该写死的  应该根据比例来
-        cell.center = CGPointMake(self.center.x, self.center.y - 60 + MARGIN_Y * i);
+        [cell removeFromSuperview];
+        [self addSubview:cell];
+        [self sendSubviewToBack:cell];
+        self.latestItemIndex = i;
         [self.underCells addObject:cell];
+        
+        cell.currentState = i;
+
+
         
         //初始位置放在屏幕外, 便于做旋转飞入的动画
 //        cell.x = - cell.height;
 //        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
-    [self reloadCardsContent];
 }
 
 - (void)reloadCardsContent {
     for (NSInteger i = 0; i < self.underCells.count; i ++) {
         V_SlideCardCell *cell = self.underCells[i];
         cell.dataItem = [self slideCard:self itemForIndex:i];
-        cell.currentState = i;
         cell.delegate = self;
-        cell.hidden = NO;
-
         [cell removeFromSuperview];
         [self addSubview:cell];
         [self sendSubviewToBack:cell];
-        
+        cell.currentState = i;
+
         self.latestItemIndex = i;
-        [UIView animateWithDuration:0.3 animations:^{
-            //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
-            cell.transform = CGAffineTransformMakeRotation((0.0f * M_PI) / 180.0f);
-        }];
+//        [UIView animateWithDuration:0.3 animations:^{
+//            //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
+//            cell.transform = CGAffineTransformMakeRotation((0.0f * M_PI) / 180.0f);
+//        }];
     }
 }
 
@@ -172,11 +162,11 @@
             cell.alpha = 1;
         }];
     } else {
-        _realCardNum -= 1;
+        _showingCardNumber -= 1;
 //        cell.x = -cell.height;
 //        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
-    if (!_realCardNum) {
+    if (_showingCardNumber <= 0) {
         //协议方法
         if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
             [self.dataSource loadNewData];
@@ -194,7 +184,7 @@
 
 - (void)reloadData {
     self.latestItemIndex = 0;
-    _realCardNum = MOST_CARD_NUM + 1;
+    _showingCardNumber = _cardNumber;
     if (self.underCells.count) {
         [self reloadCardsContent];
     } else {
@@ -212,21 +202,14 @@
     if ([self.dataSource respondsToSelector:@selector(numberOfItemsInSlideCard:)]) {
         return [self.dataSource numberOfItemsInSlideCard:slideCard];
     }
-    return 3;
+    return 4;
 }
 
-- (CGFloat)slideCard:(V_SlideCard *)slideCard heightForItemAtIndex:(NSInteger )index {
-    if ([self.dataSource respondsToSelector:@selector(slideCard:heightForItemAtIndex:)]) {
-        return [self.dataSource slideCard:slideCard heightForItemAtIndex:index];
+- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
+    if ([self.dataSource respondsToSelector:@selector(slideCard:sizeForItemAtIndex:)]) {
+        return [self.dataSource slideCard:self sizeForItemAtIndex:index];
     }
-    return self.height - 150;
-}
-
-- (CGFloat)slideCard:(V_SlideCard *)slideCard widthForItemAtIndex:(NSInteger )index {
-    if ([self.dataSource respondsToSelector:@selector(slideCard:widthForItemAtIndex:)]) {
-        return [self.dataSource slideCard:slideCard widthForItemAtIndex:index];
-    }
-    return self.width;
+    return CGSizeMake(self.width - 30, self.height - 150);
 }
 
 #pragma mark - setter
