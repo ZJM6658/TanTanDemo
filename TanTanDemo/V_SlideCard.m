@@ -12,6 +12,7 @@
     CGFloat _buttonWidth;
     CGFloat _cardNumber;//创建的cell数量
     CGFloat _showingCardNumber;
+    BOOL _isCellAnimating;
 }
 
 @property (nonatomic, strong) NSMutableArray<V_SlideCardCell *> *underCells;
@@ -39,6 +40,7 @@
     _buttonWidth = 60;
     _cardNumber = 4;
     _showingCardNumber = _cardNumber;
+    _isCellAnimating = NO;
     [self addAllObserver];
 }
 
@@ -54,7 +56,7 @@
 
 - (void)dealloc {
     NSLog(@"card dealloc");
-    [self removeAllObserver];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)layoutSlideCards {
@@ -98,20 +100,13 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
 }
 
-- (void)removeAllObserver {
-    NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
-    for (NSString *nameStr in notificationNames) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
-    }
-}
-
 - (void)moveAction:(NSNotification *)notification {
     NSDictionary *object = notification.object;
-    CGFloat PercentX = [[object objectForKey:PERCENTX] floatValue];
-    if (PercentX > 0) {
-        self.btn_like.layer.borderWidth = 5 * (1 - PercentX);
+    CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];
+    if (percentX > 0) {
+        self.btn_like.layer.borderWidth = 5 * (1 - percentX);
     } else {
-        self.btn_hate.layer.borderWidth = 5 * (1 - fabs(PercentX));
+        self.btn_hate.layer.borderWidth = 5 * (1 - fabs(percentX));
     }
 }
 
@@ -133,6 +128,10 @@
 #pragma mark - event response
 
 - (void)likeOrHateAction:(UIButton *)sender {
+    if (_isCellAnimating) {
+        return;
+    }
+    
     BOOL choosedLike = NO;
     NSInteger toCenterX = 0;
     if (sender.tag == 520) {
@@ -151,6 +150,14 @@
 }
 
 #pragma mark - V_SlideCardCellDelegate
+
+- (BOOL)isAnimating {
+    return _isCellAnimating;
+}
+
+- (void)setAnimatingState:(BOOL)animating {
+    _isCellAnimating = animating;
+}
 
 - (void)loadNewData:(V_SlideCardCell *)cell {
     if (self.latestItemIndex + 1 < [self numberOfItemsInSlideCard:self]) {

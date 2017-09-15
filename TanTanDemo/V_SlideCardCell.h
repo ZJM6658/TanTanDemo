@@ -34,6 +34,9 @@ typedef NS_ENUM(NSInteger, CardState) {
 
 @protocol V_SlideCardCellDelegate <NSObject>
 
+- (void)setAnimatingState:(BOOL)animating;
+- (BOOL)isAnimating;
+
 - (void)loadNewData:(V_SlideCardCell *)cell;
 
 @end

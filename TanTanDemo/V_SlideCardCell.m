@@ -43,7 +43,7 @@
 
 - (void)initUI {
     self.backgroundColor = [UIColor whiteColor];
-    self.layer.borderColor = RGBA(200, 200, 200, 1).CGColor;
+    self.layer.borderColor = RGBA(220, 220, 220, 1).CGColor;
     self.layer.borderWidth = 1;
     self.layer.cornerRadius = 5;
     self.layer.masksToBounds = YES;
@@ -68,42 +68,47 @@
     [self addAllObserver];
 }
 
+#pragma mark - UIPanGestureRecognizer
 - (void)panUserAction:(UIPanGestureRecognizer *)sender {
-    CGPoint center = self.center;
-    //横坐标上、纵坐标上拖动了多少像素
-    CGPoint translation = [sender translationInView:self.superview];
-    sender.view.center = CGPointMake(center.x + translation.x, center.y + translation.y);
-    [sender setTranslation:CGPointZero inView:self.superview];
-    CGPoint newCenter = sender.view.center;
+    if (self.currentState != FirstCard) {
+        return;
+    }
     
-    if (sender.state == UIGestureRecognizerStateChanged) {
-        CGFloat PercentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
-        CGFloat PercentY = (newCenter.y - self.originalCenter.y) / DROP_DISTANCE;
+    if ([self.delegate isAnimating] == NO) {
+        CGPoint center = self.center;
+        //横坐标上、纵坐标上拖动了多少像素
+        CGPoint translation = [sender translationInView:self.superview];
+        sender.view.center = CGPointMake(center.x + translation.x, center.y + translation.y);
+        [sender setTranslation:CGPointZero inView:self.superview];
+        CGPoint newCenter = sender.view.center;
         
-        //这里需要发送的是x／y的变化较大者的绝对值
-        CGFloat sendPercent = fabs(PercentX) > fabs(PercentY) ? fabs(PercentX) : fabs(PercentY);
-        //轻微移动不做缩放操作 绝对值 -0.15
-        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
-        sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX]}];
-    } else if (sender.state == UIGestureRecognizerStateEnded) {
-        if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
-            BOOL choosedLike = YES;
-            if ((newCenter.x - self.originalCenter.x) > 0) {
-                choosedLike = YES;
+        if (sender.state == UIGestureRecognizerStateChanged) {
+            CGFloat percentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
+            CGFloat percentY = (newCenter.y - self.originalCenter.y) / DROP_DISTANCE;
+            
+            //这里需要发送的是x／y的变化较大者的绝对值
+            CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
+            //轻微移动不做缩放操作 绝对值 -0.15
+            sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+            [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX]}];
+        } else if (sender.state == UIGestureRecognizerStateEnded) {
+            if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
+                BOOL choosedLike = NO;
+                if ((newCenter.x - self.originalCenter.x) > 0) {
+                    choosedLike = YES;
+                }
+                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
             } else {
-                choosedLike = NO;
+                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
             }
-            [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
-        } else {
-            [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
         }
     }
 }
 
 - (void)dealloc {
     NSLog(@"cell dealloc");
-    [self removeAllObserver];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark - notification
@@ -112,13 +117,6 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
-}
-
-- (void)removeAllObserver {
-    NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
-    for (NSString *nameStr in notificationNames) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
-    }
 }
 
 - (void)moveAction:(NSNotification *)notification {
@@ -143,13 +141,13 @@
         }
         self.transform = CGAffineTransformMakeRotation(angle);
         
-        CGFloat PercentX = [[params objectForKey:PERCENTX] floatValue];
-        [self setSignAlpha:PercentX];
+        CGFloat percentX = [[params objectForKey:PERCENTX] floatValue];
+        [self setSignAlpha:percentX];
     } else {
         //中间cell 缩放+位移
-        CGFloat PercentMain = [[params objectForKey:PERCENTMAIN] floatValue];
-        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
-        CGFloat offsetY = self.cellMarginY * PercentMain;
+        CGFloat percentMain = [[params objectForKey:PERCENTMAIN] floatValue];
+        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * percentMain;
+        CGFloat offsetY = self.cellMarginY * percentMain;
         
         self.transform = CGAffineTransformMakeScale(scale, scale);
         self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
@@ -161,16 +159,19 @@
     BOOL isClickButton = [[notification.object objectForKey:@"CLICK"] boolValue];
 
     if (isClickButton) {
-        [UIView animateWithDuration:0.3 animations:^{
-            CGFloat PercentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
-            CGFloat MoveToX = 0;
+        if (self.currentState == FirstCard) {
+            [self.delegate setAnimatingState:YES];
+        }
+        [UIView animateWithDuration:0.2 animations:^{
+            CGFloat percentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
+            CGFloat moveToX = 0;
             if (choosedLike) {
-                PercentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
-                MoveToX = SCRW;
+                percentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
+                moveToX = SCRW;
             }
-            CGFloat sendPercent = fabs(PercentX);
+            CGFloat sendPercent = fabs(percentX);
             sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-            [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX], @"MoveToX":[NSNumber numberWithFloat:MoveToX]}];
+            [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
         } completion:^(BOOL finished) {
             [self stateChangeWithLike:choosedLike];
         }];
@@ -194,26 +195,30 @@
 - (void)likeAction {
     CGPoint toPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
     self.iv_like.alpha = 1;
-    [UIView animateWithDuration:0.5 animations:^{
+    [self.delegate setAnimatingState:YES];
+    [UIView animateWithDuration:0.3 animations:^{
         self.center = toPoint;
         self.transform = CGAffineTransformMakeRotation(0);
         [self setSignAlpha:0];
         self.alpha = 0;
     } completion:^(BOOL finished) {
         [self shouldDoSomethingWithState:OtherCard];
+        [self.delegate setAnimatingState:NO];
     }];
 }
 
 - (void)hateAction {
     CGPoint toPoint = CGPointMake(- SCRW * 2, self.originalCenter.y);
     self.iv_hate.alpha = 1;
-    [UIView animateWithDuration:0.5 animations:^{
+    [self.delegate setAnimatingState:YES];
+    [UIView animateWithDuration:0.3 animations:^{
         self.center = toPoint;
         self.transform = CGAffineTransformMakeRotation(0);
         self.alpha = 0;
     } completion:^(BOOL finished) {
         [self setSignAlpha:0];
         [self shouldDoSomethingWithState:OtherCard];
+        [self.delegate setAnimatingState:NO];
     }];
 }
 
