@@ -57,7 +57,7 @@
 }
 
 - (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
-    return CGSizeMake(300, 400);
+    return CGSizeMake(350, 400);
 }
 
 #pragma mark - private methods

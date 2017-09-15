@@ -133,12 +133,14 @@
         //当前cell 旋转+按钮alpha改变
         CGFloat width = SCRW / 2;
         CGFloat moveToX = self.center.x;
-        //点击按钮时穿进来的数据
+        CGFloat angle = (1 - moveToX / width) * M_PI_4 / 2;
+
+        //点击按钮时的动画效果
         if ([params objectForKey:@"MoveToX"]) {
             moveToX = [[params objectForKey:@"MoveToX"] floatValue];
             self.center = CGPointMake(moveToX, self.center.y);
+            angle = (moveToX / width - 1)  * M_PI_4 / 2;
         }
-        CGFloat angle = M_PI_4 / 2 * (width - moveToX) / width;
         self.transform = CGAffineTransformMakeRotation(angle);
         
         CGFloat PercentX = [[params objectForKey:PERCENTX] floatValue];
@@ -200,7 +202,6 @@
     } completion:^(BOOL finished) {
         [self shouldDoSomethingWithState:OtherCard];
     }];
-    
 }
 
 - (void)hateAction {
@@ -232,12 +233,19 @@
 
 - (void)shouldDoSomethingWithState:(CardState)state {
     self.currentState = state;
-
     if (self.currentState == OtherCard) {
         if ([self.delegate respondsToSelector:@selector(loadNewData:)]) {
             [self.delegate loadNewData:self];
         }
     }
+}
+
+#pragma mark - outside methods
+
+- (void)hideToLeft {
+    [self.superview sendSubviewToBack:self];
+    self.center = CGPointMake(- self.height, self.originalCenter.y);
+    self.transform = CGAffineTransformMakeRotation(- M_PI_2);
 }
 
 #pragma mark - setter

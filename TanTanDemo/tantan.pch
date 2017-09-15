@@ -19,7 +19,7 @@
 #define SCRH        [[UIScreen mainScreen] bounds].size.height
 
 #define DROP_DISTANCE  100
-#define TRANSFORM_SPACE  0.1
+#define TRANSFORM_SPACE  0.06
 
 #define RESETFRAME      @"resetFrameNotification"
 #define MOVEACTION      @"moveActionNotification"

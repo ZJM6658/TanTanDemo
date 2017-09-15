@@ -14,13 +14,11 @@
     CGFloat _showingCardNumber;
 }
 
-@property (nonatomic, strong) V_SlideCardCell                   *topCell;
 @property (nonatomic, strong) NSMutableArray<V_SlideCardCell *> *underCells;
 @property (nonatomic)         NSInteger latestItemIndex;
 
 @property (nonatomic, strong) UIButton  *btn_like;
 @property (nonatomic, strong) UIButton  *btn_hate;
-
 @property (nonatomic, strong) UIButton  *btn_nodata;
 
 @end
@@ -59,7 +57,6 @@
     [self removeAllObserver];
 }
 
-#warning 可以在没有数据了加个loading页面
 - (void)layoutSlideCards {
     for (NSInteger i = 0; i < _cardNumber; i ++) {
         CGSize cellSize = [self slideCard:self sizeForItemAtIndex:i];;
@@ -67,10 +64,6 @@
         cell.cellMarginY = cellSize.height * TRANSFORM_SPACE - 5;
         cell.delegate = self;
         [self.underCells addObject:cell];
-        
-        //初始位置放在屏幕外, 便于做旋转飞入的动画
-        //        cell.x = - cell.height;
-        //        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
     }
     [self reloadCardsContent];
 }
@@ -82,18 +75,18 @@
     for (NSInteger i = 0; i < self.underCells.count; i ++) {
         V_SlideCardCell *cell = self.underCells[i];
         [cell removeFromSuperview];
-
         [self addSubview:cell];
-        [self sendSubviewToBack:cell];
         
-        cell.hidden = NO;
         cell.dataItem = [self slideCard:self itemForIndex:i];
-        cell.currentState = i;
+        cell.alpha = 1;
+
+        //先设置到左边 再动画进入
+        [cell hideToLeft];
+        [UIView animateWithDuration:0.5 animations:^{
+            cell.currentState = i;
+        }];
+        
         self.latestItemIndex = i;
-//        [UIView animateWithDuration:0.3 animations:^{
-//            //旋转的时候需要设置基准点，否则应该先旋转回来再做其他设置
-//            cell.transform = CGAffineTransformMakeRotation((0.0f * M_PI) / 180.0f);
-//        }];
     }
 }
 
@@ -147,8 +140,14 @@
         toCenterX = SCRW;
     }
     
-#warning 点击按钮应该也先动画再改变状态
     [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike), @"CLICK": @YES}];
+}
+
+- (void)loadMoreData {
+//    加载下一组数据
+    if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
+        [self.dataSource loadNewData];
+    }
 }
 
 #pragma mark - V_SlideCardCellDelegate
@@ -158,28 +157,16 @@
         self.latestItemIndex += 1;
         [self sendSubviewToBack:cell];
         cell.dataItem = [self slideCard:self itemForIndex:self.latestItemIndex];
-        [UIView animateWithDuration:0.3 animations:^{
+        [UIView animateWithDuration:0.2 animations:^{
             cell.alpha = 1;
         }];
     } else {
         _showingCardNumber -= 1;
-//        cell.x = - cell.height;
-//        cell.transform = CGAffineTransformMakeRotation((-90.0f * M_PI) / 180.0f);
+        [cell hideToLeft];
     }
     if (_showingCardNumber <= 0) {
-        
         self.btn_nodata.hidden = NO;
         [self bringSubviewToFront:self.btn_nodata];
-        //协议方法
-//        if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
-//            [self.dataSource loadNewData];
-//        }
-        
-        //主动刷新
-        //[self reloadData];
-        
-        //提示
-        //        [[[UIAlertView alloc] initWithTitle:@"没有更多数据了" message:@"请实现加载下一页方法" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil] show];
     }
 }
 
@@ -271,6 +258,7 @@
         _btn_nodata.layer.cornerRadius = 5;
         _btn_nodata.layer.masksToBounds = YES;
         _btn_nodata.hidden = YES;
+        [_btn_nodata addTarget:self action:@selector(loadMoreData) forControlEvents:UIControlEventTouchUpInside];
     }
     return _btn_nodata;
 }

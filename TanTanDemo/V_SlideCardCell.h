@@ -28,6 +28,8 @@ typedef NS_ENUM(NSInteger, CardState) {
 /** cell之间的Y偏移，显示层叠效果*/
 @property (nonatomic)         CGFloat       cellMarginY;
 
+- (void)hideToLeft;
+
 @end
 
 @protocol V_SlideCardCellDelegate <NSObject>
