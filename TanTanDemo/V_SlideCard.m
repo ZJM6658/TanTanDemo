@@ -148,19 +148,7 @@
     }
     
 #warning 点击按钮应该也先动画再改变状态
-    
-//    for (NSInteger i = 0; i < 2000; i ++) {
-//        CGFloat PercentX = (i / 10.0 - self.center.x) / DROP_DISTANCE;
-//        
-//        //这里需要发送的是x／y的变化较大者的绝对值
-//        CGFloat sendPercent = fabs(PercentX);
-//        //轻微移动不做缩放操作 绝对值 -0.15
-//        sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
-//        sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-//        [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX]}];
-//    }
-
-    [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike), @"CLICK": @YES}];
 }
 
 #pragma mark - V_SlideCardCellDelegate
@@ -243,6 +231,7 @@
     return _underCells;
 }
 
+#warning 按钮事件的控制  连续点击  应该等一个跑完
 - (UIButton *)btn_like {
     if (_btn_like == nil) {
         _btn_like = [[UIButton alloc] initWithFrame:CGRectMake((self.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];

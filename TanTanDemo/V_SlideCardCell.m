@@ -106,7 +106,88 @@
     [self removeAllObserver];
 }
 
-#pragma mark - outside methods
+#pragma mark - notification
+
+- (void)addAllObserver {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
+}
+
+- (void)removeAllObserver {
+    NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
+    for (NSString *nameStr in notificationNames) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
+    }
+}
+
+- (void)moveAction:(NSNotification *)notification {
+    NSDictionary *object = notification.object;
+    [self moveWithParams:object];
+}
+
+- (void)moveWithParams:(NSDictionary *)params {
+    if (self.currentState == OtherCard) return;//最底下的cell不做相应
+
+    if (self.currentState == FirstCard) {
+        //当前cell 旋转+按钮alpha改变
+        CGFloat width = SCRW / 2;
+        CGFloat moveToX = self.center.x;
+        //点击按钮时穿进来的数据
+        if ([params objectForKey:@"MoveToX"]) {
+            moveToX = [[params objectForKey:@"MoveToX"] floatValue];
+            self.center = CGPointMake(moveToX, self.center.y);
+        }
+        CGFloat angle = M_PI_4 / 2 * (width - moveToX) / width;
+        self.transform = CGAffineTransformMakeRotation(angle);
+        
+        CGFloat PercentX = [[params objectForKey:PERCENTX] floatValue];
+        [self setSignAlpha:PercentX];
+    } else {
+        //中间cell 缩放+位移
+        CGFloat PercentMain = [[params objectForKey:PERCENTMAIN] floatValue];
+        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
+        CGFloat offsetY = self.cellMarginY * PercentMain;
+        
+        self.transform = CGAffineTransformMakeScale(scale, scale);
+        self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+    }
+}
+
+- (void)stateChangeAction:(NSNotification *)notification {
+    BOOL choosedLike = [[notification.object objectForKey:@"RESULT"] boolValue];
+    BOOL isClickButton = [[notification.object objectForKey:@"CLICK"] boolValue];
+
+    if (isClickButton) {
+        [UIView animateWithDuration:0.3 animations:^{
+            CGFloat PercentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
+            CGFloat MoveToX = 0;
+            if (choosedLike) {
+                PercentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
+                MoveToX = SCRW;
+            }
+            CGFloat sendPercent = fabs(PercentX);
+            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+            [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:PercentX], @"MoveToX":[NSNumber numberWithFloat:MoveToX]}];
+        } completion:^(BOOL finished) {
+            [self stateChangeWithLike:choosedLike];
+        }];
+    } else {
+        [self stateChangeWithLike:choosedLike];
+    }
+}
+
+- (void)stateChangeWithLike:(BOOL)choosedLike {
+    if (self.currentState == FirstCard) {
+        if (choosedLike) {
+            [self likeAction];
+        } else {
+            [self hateAction];
+        }
+    } else {
+        [self shouldDoSomethingWithState:self.currentState - 1];
+    }
+}
 
 - (void)likeAction {
     CGPoint toPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
@@ -133,55 +214,6 @@
         [self setSignAlpha:0];
         [self shouldDoSomethingWithState:OtherCard];
     }];
-}
-
-#pragma mark - notification
-
-- (void)addAllObserver {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
-}
-
-- (void)removeAllObserver {
-    NSArray *notificationNames = @[MOVEACTION, RESETFRAME, STATECHANGE];
-    for (NSString *nameStr in notificationNames) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:nameStr object:nil];
-    }
-}
-
-- (void)moveAction:(NSNotification *)notification {
-    if (self.currentState == OtherCard) return;//最底下的cell不做相应
-    NSDictionary *object = notification.object;
-    if (self.currentState == FirstCard) {
-        //当前cell 旋转+按钮alpha改变
-        CGFloat PercentX = [[object objectForKey:PERCENTX] floatValue];
-        CGFloat width = SCRW / 2;
-        CGFloat angle = M_PI_4 / 2 * (width - self.center.x) / width;
-        self.transform = CGAffineTransformMakeRotation(angle);
-        [self setSignAlpha:PercentX];
-    } else {
-        //中间cell 缩放+位移
-        CGFloat PercentMain = [[object objectForKey:PERCENTMAIN] floatValue];
-        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * PercentMain;
-        CGFloat offsetY = self.cellMarginY * PercentMain;
-
-        self.transform = CGAffineTransformMakeScale(scale, scale);
-        self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
-    }
-}
-
-- (void)stateChangeAction:(NSNotification *)notification {
-    if (self.currentState == FirstCard) {
-        BOOL choosedLike = [[notification.object objectForKey:@"RESULT"] boolValue];
-        if (choosedLike) {
-            [self likeAction];
-        } else {
-            [self hateAction];
-        }
-    } else {
-        [self shouldDoSomethingWithState:self.currentState - 1];
-    }
 }
 
 - (void)resetFrame:(NSNotification *)notification {
