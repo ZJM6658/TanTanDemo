@@ -169,8 +169,8 @@
             [self.delegate setAnimatingState:YES];
         }
         
-        [UIView animateKeyframesWithDuration:0.5 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
-            [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:3/5.0 animations:^{
+        [UIView animateKeyframesWithDuration:0.8 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
+            [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
                 //FirstCard先回撤
                 if (self.currentState == FirstCard) {
                     CGFloat angle = 5.0 / 180 * M_PI;
@@ -183,42 +183,49 @@
                     self.transform = CGAffineTransformMakeRotation(angle);
                 }
             }];
-            [UIView addKeyframeWithRelativeStartTime:3/5.0 relativeDuration:2/5.0 animations:^{
+            [UIView addKeyframeWithRelativeStartTime:1/4.0 relativeDuration:1/4.0 animations:^{
+                //FirstCard再恢复原位
+                if (self.currentState == FirstCard) {
+                    self.center = self.originalCenter;
+                    self.transform = CGAffineTransformMakeRotation(0);
+                }
+            }];
+            [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
                 CGFloat percentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
-                CGFloat moveToX = 0;
+                CGFloat moveToX = - SCRW;
                 if (choosedLike) {
                     percentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
-                    moveToX = SCRW;
+                    moveToX = SCRW * 2;
                 }
                 CGFloat sendPercent = fabs(percentX);
                 sendPercent = sendPercent >= 1 ? 1 : sendPercent;
                 [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
             }];
         } completion:^(BOOL finished) {
-            [self stateChangeWithLike:choosedLike];
+            [self stateChangeWithLike:choosedLike isClick:YES];
         }];
     } else {
-        [self stateChangeWithLike:choosedLike];
+        [self stateChangeWithLike:choosedLike isClick:NO];
     }
 }
 
-- (void)stateChangeWithLike:(BOOL)choosedLike {
+- (void)stateChangeWithLike:(BOOL)choosedLike isClick:(BOOL)isClick{
     if (self.currentState == FirstCard) {
         if (choosedLike) {
-            [self likeAction];
+            [self likeActionWithDuration:isClick ? 0 : 0.3];
         } else {
-            [self hateAction];
+            [self hateActionWithDuration:isClick ? 0 : 0.3];
         }
     } else {
         [self shouldDoSomethingWithState:self.currentState - 1];
     }
 }
 
-- (void)likeAction {
+- (void)likeActionWithDuration:(NSTimeInterval)duration {
     CGPoint toPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
     self.iv_like.alpha = 1;
     [self.delegate setAnimatingState:YES];
-    [UIView animateWithDuration:0.3 animations:^{
+    [UIView animateWithDuration:duration animations:^{
         self.center = toPoint;
         self.transform = CGAffineTransformMakeRotation(0);
         [self setSignAlpha:0];
@@ -229,11 +236,11 @@
     }];
 }
 
-- (void)hateAction {
-    CGPoint toPoint = CGPointMake(- SCRW * 2, self.originalCenter.y);
+- (void)hateActionWithDuration:(NSTimeInterval)duration {
+    CGPoint toPoint = CGPointMake(- SCRW, self.originalCenter.y);
     self.iv_hate.alpha = 1;
     [self.delegate setAnimatingState:YES];
-    [UIView animateWithDuration:0.3 animations:^{
+    [UIView animateWithDuration:duration animations:^{
         self.center = toPoint;
         self.transform = CGAffineTransformMakeRotation(0);
         self.alpha = 0;
@@ -259,7 +266,9 @@
             self.transform = CGAffineTransformMakeScale(scale, scale);
         }
     } completion:^(BOOL finished) {
-        [self.delegate setAnimatingState:NO];
+        if (self.currentState == FirstCard) {
+            [self.delegate setAnimatingState:NO];
+        }
     }];
 }
 
