@@ -168,16 +168,32 @@
         if (self.currentState == FirstCard) {
             [self.delegate setAnimatingState:YES];
         }
-        [UIView animateWithDuration:0.2 animations:^{
-            CGFloat percentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
-            CGFloat moveToX = 0;
-            if (choosedLike) {
-                percentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
-                moveToX = SCRW;
-            }
-            CGFloat sendPercent = fabs(percentX);
-            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-            [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
+        
+        [UIView animateKeyframesWithDuration:0.5 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
+            [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:3/5.0 animations:^{
+                //FirstCard先回撤
+                if (self.currentState == FirstCard) {
+                    CGFloat angle = 5.0 / 180 * M_PI;
+                    CGFloat centerOffsetX = 10;
+                    if (choosedLike) {
+                        angle = - angle;
+                        centerOffsetX = - centerOffsetX;
+                    }
+                    self.center = CGPointMake(self.center.x + centerOffsetX, self.center.y);
+                    self.transform = CGAffineTransformMakeRotation(angle);
+                }
+            }];
+            [UIView addKeyframeWithRelativeStartTime:3/5.0 relativeDuration:2/5.0 animations:^{
+                CGFloat percentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
+                CGFloat moveToX = 0;
+                if (choosedLike) {
+                    percentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
+                    moveToX = SCRW;
+                }
+                CGFloat sendPercent = fabs(percentX);
+                sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+                [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
+            }];
         } completion:^(BOOL finished) {
             [self stateChangeWithLike:choosedLike];
         }];
@@ -229,7 +245,10 @@
 }
 
 - (void)resetFrame:(NSNotification *)notification {
-    [UIView animateWithDuration:0.2 animations:^{
+    if (self.currentState == FirstCard) {
+        [self.delegate setAnimatingState:YES];
+    }
+    [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
         if (self.currentState == FirstCard) {
             self.center = self.originalCenter;
             self.transform = CGAffineTransformMakeRotation(0);
@@ -239,6 +258,8 @@
             CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE;
             self.transform = CGAffineTransformMakeScale(scale, scale);
         }
+    } completion:^(BOOL finished) {
+        [self.delegate setAnimatingState:NO];
     }];
 }
 

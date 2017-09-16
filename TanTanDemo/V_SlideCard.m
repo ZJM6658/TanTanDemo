@@ -84,9 +84,10 @@
 
         //先设置到左边 再动画进入
         [cell hideToLeft];
-        [UIView animateWithDuration:0.5 animations:^{
+        
+        [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.8 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             cell.currentState = i;
-        }];
+        } completion:nil];
         
         self.latestItemIndex = i;
     }
