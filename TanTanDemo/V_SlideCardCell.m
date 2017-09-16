@@ -11,6 +11,7 @@
 
 @interface V_SlideCardCell ()
 
+@property (nonatomic, strong) UIView *v_container;
 @property (nonatomic, strong) UIImageView   *iv_user;
 @property (nonatomic, strong) UIImageView   *iv_like;
 @property (nonatomic, strong) UIImageView   *iv_hate;
@@ -42,20 +43,25 @@
 }
 
 - (void)initUI {
-    self.backgroundColor = [UIColor whiteColor];
-    self.layer.borderColor = RGBA(220, 220, 220, 1).CGColor;
-    self.layer.borderWidth = 1;
-    self.layer.cornerRadius = 5;
-    self.layer.masksToBounds = YES;
+    self.backgroundColor = [UIColor clearColor];
     
-    [self addSubview:self.iv_user];
-    [self addSubview:self.iv_like];
-    [self addSubview:self.iv_hate];
+    //关于shadow和maskToBounds的冲突问题 可以看( http://www.cocoachina.com/ios/20150104/10816.html )中关于阴影的章节
+    self.layer.shadowOffset = CGSizeMake(0, 3);
+    self.layer.shadowRadius = 5.0;
+    self.layer.shadowColor = [UIColor colorWithWhite:0.1 alpha:0.5].CGColor;
+    self.layer.shadowOpacity = 0.3;
     
-    [self addSubview:self.lb_name];
-    [self addSubview:self.lb_age];
-    [self addSubview:self.lb_constellation];
-    [self addSubview:self.lb_jobOrDistance];
+    [self addSubview:self.v_container];
+    
+    //下面这些可以放在抽离出来的cell里面
+    [self.v_container addSubview:self.iv_user];
+    [self.v_container addSubview:self.iv_like];
+    [self.v_container addSubview:self.iv_hate];
+    
+    [self.v_container addSubview:self.lb_name];
+    [self.v_container addSubview:self.lb_age];
+    [self.v_container addSubview:self.lb_constellation];
+    [self.v_container addSubview:self.lb_jobOrDistance];
 }
 
 - (void)setUpConfig {
@@ -289,6 +295,18 @@
     NSInteger state = self.currentState;
     if (state > 2) state = 2;
     return state;
+}
+
+- (UIView *)v_container {
+    if (_v_container == nil) {
+        _v_container = [[UIView alloc] initWithFrame:self.bounds];
+        _v_container.backgroundColor = [UIColor whiteColor];
+        _v_container.layer.borderColor = RGBA(220, 220, 220, 1).CGColor;
+        _v_container.layer.borderWidth = 1.0;
+        _v_container.layer.cornerRadius = 5.0;
+        _v_container.layer.masksToBounds = YES;
+    }
+    return _v_container;
 }
 
 - (UIImageView *)iv_user {
