@@ -63,6 +63,8 @@
 }
 
 - (void)layoutSlideCards {
+    [self.underCells removeAllObjects];
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     for (NSInteger i = 0; i < _cardNumber; i ++) {
         CGSize cellSize = [self slideCard:self sizeForItemAtIndex:i];;
         V_SlideCardCell *cell = [[[self currentClass] alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
@@ -154,57 +156,61 @@
 - (void)setTopCardScrollToDirection:(PanDirection)direction fromClick:(BOOL)fromClick{
     for (V_SlideCardCell *cell in self.underCells) {
         if (fromClick) {
-            //按钮点击的时候页面上的按钮需要有体现
-            if (cell.currentState == FirstCard) {
-                if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)]) {
-                    [self.delegate slideCardCell:cell willScrollToDirection:direction];
-                }
-            }
-            
-            _isCellAnimating = YES;
-#warning 这个动画时间可能有点长，找时间再调
-            [UIView animateKeyframesWithDuration:0.7 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
-                [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
-                    //FirstCard先回撤
-                    if (cell.currentState == FirstCard) {
-                        CGFloat angle = 5.0 / 180 * M_PI;
-                        CGFloat centerOffsetX = 10;
-                        if (direction == PanDirectionRight) {
-                            angle = - angle;
-                            centerOffsetX = - centerOffsetX;
-                        }
-                        cell.center = CGPointMake(cell.center.x + centerOffsetX, cell.center.y);
-                        cell.transform = CGAffineTransformMakeRotation(angle);
-                    }
-                }];
-                [UIView addKeyframeWithRelativeStartTime:1/4.0 relativeDuration:1/4.0 animations:^{
-                    //FirstCard再恢复原位
-                    if (cell.currentState == FirstCard) {
-                        cell.center = cell.originalCenter;
-                        cell.transform = CGAffineTransformMakeRotation(0);
-                    }
-                }];
-                //正常调用moveAction
-                [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
-                    CGFloat percentX = (0 - cell.originalCenter.x) / DROP_DISTANCE;
-                    CGFloat moveToX = - SCRW;
-                    if (direction == PanDirectionRight) {
-                        percentX = (SCRW - cell.originalCenter.x) / DROP_DISTANCE;
-                        moveToX = SCRW * 2;
-                    }
-                    CGFloat sendPercent = fabs(percentX);
-                    sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-                    [cell moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
-                }];
-            } completion:^(BOOL finished) {
-                [self changedStateCell:cell withDirection:direction fromClick:fromClick];
-            }];
+            [self scrollCell:cell toDirection:direction];
         } else {
-            [self changedStateCell:cell withDirection:direction fromClick:fromClick];
+            [self changedStateCell:cell withDirection:direction fromClick:NO];
         }
     }
 }
 
+//直接动画翻页后状态变更
+- (void)scrollCell:(V_SlideCardCell *)cell toDirection:(PanDirection)direction {
+    //按钮点击的时候页面上的按钮需要有体现
+    if (cell.currentState == FirstCard) {
+        if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)]) {
+            [self.delegate slideCardCell:cell willScrollToDirection:direction];
+        }
+    }
+    
+    _isCellAnimating = YES;
+#warning 这个动画时间可能有点长，找时间再调
+    [UIView animateKeyframesWithDuration:0.7 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
+            //FirstCard先回撤
+            if (cell.currentState == FirstCard) {
+                CGFloat angle = 5.0 / 180 * M_PI;
+                CGFloat centerOffsetX = 10;
+                if (direction == PanDirectionRight) {
+                    angle = - angle;
+                    centerOffsetX = - centerOffsetX;
+                }
+                cell.center = CGPointMake(cell.center.x + centerOffsetX, cell.center.y);
+                cell.transform = CGAffineTransformMakeRotation(angle);
+            }
+        }];
+        [UIView addKeyframeWithRelativeStartTime:1/4.0 relativeDuration:1/4.0 animations:^{
+            //FirstCard再恢复原位
+            if (cell.currentState == FirstCard) {
+                cell.center = cell.originalCenter;
+                cell.transform = CGAffineTransformMakeRotation(0);
+            }
+        }];
+        //正常调用moveAction
+        [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
+            CGFloat percentX = (0 - cell.originalCenter.x) / DROP_DISTANCE;
+            CGFloat moveToX = - SCRW;
+            if (direction == PanDirectionRight) {
+                percentX = (SCRW - cell.originalCenter.x) / DROP_DISTANCE;
+                moveToX = SCRW * 2;
+            }
+            CGFloat sendPercent = fabs(percentX);
+            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+            [cell moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
+        }];
+    } completion:^(BOOL finished) {
+        [self changedStateCell:cell withDirection:direction fromClick:YES];
+    }];
+}
 //动画结束
 - (void)changedStateCell:(V_SlideCardCell *)cell withDirection:(PanDirection)direction fromClick:(BOOL)fromClick {
     if (cell.currentState == FirstCard) {
@@ -330,6 +336,10 @@
 
 - (void)setDataSource:(id<V_SlideCardDataSource>)dataSource {
     _dataSource = dataSource;
+//#warning 怎么保证cellName和DataSource都有了才创建
+    if (self.cellClassName.length > 0) {
+        [self layoutSlideCards];
+    }
 }
 
 #pragma mark - getter

@@ -105,6 +105,26 @@
 }
 
 - (void)slideCardCell:(V_TanTan *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
+    
+#warning 底部按钮borderWidth不支持动画，抽时间改成底部有个圆圈，上面有个button改变transform\
+然后按钮点击时也添加个跳动效果
+    
+    /*
+     按钮点击缩放效果 
+     
+     CABasicAnimation*pulse = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+     pulse.timingFunction= [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+     pulse.duration = 0.08;
+     pulse.repeatCount= 1;
+     pulse.autoreverses= YES;
+     pulse.fromValue= [NSNumber numberWithFloat:0.7];
+     pulse.toValue= [NSNumber numberWithFloat:1.3];
+     [button layer]
+     addAnimation:pulse forKey:nil];
+     
+     */
+    
+    
     [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
         self.btn_like.layer.borderWidth = _buttonBorderWidth;
         self.btn_hate.layer.borderWidth = _buttonBorderWidth;
@@ -132,9 +152,9 @@
 - (V_SlideCard *)slideCard {
     if (_slideCard == nil) {
         _slideCard = [[V_SlideCard alloc] initWithFrame:self.view.bounds];
+        [_slideCard registerCellClassName:@"V_TanTan"];
         _slideCard.dataSource = self;
         _slideCard.delegate = self;
-        [_slideCard registerCellClassName:@"V_TanTan"];
     }
     return _slideCard;
 }
