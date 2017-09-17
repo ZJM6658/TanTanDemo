@@ -7,7 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "M_SlideCard.h"
+
+typedef NS_ENUM(NSInteger, PanDirection) {
+    PanDirectionNone = 0,
+    PanDirectionLeft,
+    PanDirectionRight,
+};
 
 typedef NS_ENUM(NSInteger, CardState) {
     FirstCard = 0,
@@ -20,8 +25,9 @@ typedef NS_ENUM(NSInteger, CardState) {
 
 @interface V_SlideCardCell : UIView
 
+@property (nonatomic, strong) UIView *contentView;
+
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
-@property (nonatomic, strong) M_SlideCard   *dataItem;
 
 /** cell当前所处的状态 */
 @property (nonatomic)         CardState     currentState;
@@ -29,7 +35,8 @@ typedef NS_ENUM(NSInteger, CardState) {
 @property (nonatomic)         CGFloat       cellMarginY;
 
 - (void)hideToLeft;
-
+- (void)setUpConfig;
+- (void)initUI;
 @end
 
 @protocol V_SlideCardCellDelegate <NSObject>

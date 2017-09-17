@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E368C7A41F6E2187003973EE /* M_TanTan.m in Sources */ = {isa = PBXBuildFile; fileRef = E368C7A11F6E2187003973EE /* M_TanTan.m */; };
+		E368C7A51F6E2187003973EE /* V_TanTan.m in Sources */ = {isa = PBXBuildFile; fileRef = E368C7A31F6E2187003973EE /* V_TanTan.m */; };
 		E36F709E1DDB45DE004B9889 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F709D1DDB45DE004B9889 /* main.m */; };
 		E36F70A11DDB45DE004B9889 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E36F70A01DDB45DE004B9889 /* AppDelegate.m */; };
 		E36F70A91DDB45DE004B9889 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36F70A81DDB45DE004B9889 /* Assets.xcassets */; };
@@ -17,7 +19,6 @@
 		E3758D701DDBF6DA00CA90DE /* V_SlideCard.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */; };
 		E3758D731DDBFD7600CA90DE /* V_SlideCardCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D721DDBFD7600CA90DE /* V_SlideCardCell.m */; };
 		E3758D771DDC3AC800CA90DE /* UIView+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D761DDC3AC800CA90DE /* UIView+Extension.m */; };
-		E3758D7A1DDC501700CA90DE /* M_SlideCard.m in Sources */ = {isa = PBXBuildFile; fileRef = E3758D791DDC501700CA90DE /* M_SlideCard.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E368C7A01F6E2187003973EE /* M_TanTan.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = M_TanTan.h; sourceTree = "<group>"; };
+		E368C7A11F6E2187003973EE /* M_TanTan.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = M_TanTan.m; sourceTree = "<group>"; };
+		E368C7A21F6E2187003973EE /* V_TanTan.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = V_TanTan.h; sourceTree = "<group>"; };
+		E368C7A31F6E2187003973EE /* V_TanTan.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = V_TanTan.m; sourceTree = "<group>"; };
 		E36F70991DDB45DE004B9889 /* TanTanDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TanTanDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36F709D1DDB45DE004B9889 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		E36F709F1DDB45DE004B9889 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -60,8 +65,6 @@
 		E3758D741DDC38D200CA90DE /* tantan.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tantan.pch; sourceTree = "<group>"; };
 		E3758D751DDC3AC800CA90DE /* UIView+Extension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Extension.h"; sourceTree = "<group>"; };
 		E3758D761DDC3AC800CA90DE /* UIView+Extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Extension.m"; sourceTree = "<group>"; };
-		E3758D781DDC501700CA90DE /* M_SlideCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = M_SlideCard.h; sourceTree = "<group>"; };
-		E3758D791DDC501700CA90DE /* M_SlideCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = M_SlideCard.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +92,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E368C79F1F6E2187003973EE /* TanTanExample */ = {
+			isa = PBXGroup;
+			children = (
+				E368C7A01F6E2187003973EE /* M_TanTan.h */,
+				E368C7A11F6E2187003973EE /* M_TanTan.m */,
+				E368C7A21F6E2187003973EE /* V_TanTan.h */,
+				E368C7A31F6E2187003973EE /* V_TanTan.m */,
+			);
+			path = TanTanExample;
+			sourceTree = "<group>";
+		};
 		E36F70901DDB45DD004B9889 = {
 			isa = PBXGroup;
 			children = (
@@ -116,10 +130,9 @@
 				E36F70A01DDB45DE004B9889 /* AppDelegate.m */,
 				E3758D751DDC3AC800CA90DE /* UIView+Extension.h */,
 				E3758D761DDC3AC800CA90DE /* UIView+Extension.m */,
+				E368C79F1F6E2187003973EE /* TanTanExample */,
 				E36F70CF1DDB461C004B9889 /* VC_Root.h */,
 				E36F70D01DDB461C004B9889 /* VC_Root.m */,
-				E3758D781DDC501700CA90DE /* M_SlideCard.h */,
-				E3758D791DDC501700CA90DE /* M_SlideCard.m */,
 				E3758D6E1DDBF6DA00CA90DE /* V_SlideCard.h */,
 				E3758D6F1DDBF6DA00CA90DE /* V_SlideCard.m */,
 				E3758D711DDBFD7600CA90DE /* V_SlideCardCell.h */,
@@ -291,9 +304,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E368C7A51F6E2187003973EE /* V_TanTan.m in Sources */,
 				E3758D771DDC3AC800CA90DE /* UIView+Extension.m in Sources */,
+				E368C7A41F6E2187003973EE /* M_TanTan.m in Sources */,
 				E3758D701DDBF6DA00CA90DE /* V_SlideCard.m in Sources */,
-				E3758D7A1DDC501700CA90DE /* M_SlideCard.m in Sources */,
 				E36F70D11DDB461C004B9889 /* VC_Root.m in Sources */,
 				E36F70A11DDB45DE004B9889 /* AppDelegate.m in Sources */,
 				E36F709E1DDB45DE004B9889 /* main.m in Sources */,

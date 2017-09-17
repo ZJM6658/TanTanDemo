@@ -1,5 +1,5 @@
 //
-//  M_SlideCard.h
+//  M_TanTan.h
 //  TanTanDemo
 //
 //  Created by zhujiamin on 2016/11/16.
@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface M_SlideCard : NSObject
+@interface M_TanTan : NSObject
 
 @property (nonatomic, strong) NSString *imageName;
 

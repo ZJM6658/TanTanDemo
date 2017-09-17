@@ -9,14 +9,22 @@
 #import <UIKit/UIKit.h>
 #import "V_SlideCardCell.h"
 
-@protocol V_SlideCardDataSource;
+@protocol V_SlideCardDelegate, V_SlideCardDataSource;
 
 @interface V_SlideCard : UIView
 
+//cell中心的位置 偏移
+@property (nonatomic) CGFloat celloffsetY;
+//shadow enable
+@property (nonatomic) BOOL enableShadow;
+
+@property (nonatomic, weak)   id<V_SlideCardDelegate>       delegate;
 @property (nonatomic, weak)   id<V_SlideCardDataSource>     dataSource;
 
 - (void)reloadData;
-
+- (void)registerCellClassName:(NSString *)aClassName;
+/**外部调用 让动画驱动翻一页*/
+- (void)animateTopCardToDirection:(PanDirection)direction;
 @end
 
 @protocol V_SlideCardDataSource<NSObject>
@@ -24,8 +32,20 @@
 - (void)loadNewData;
 
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
-- (M_SlideCard *)slideCard:(V_SlideCard *)slideCard itemForIndex:(NSInteger)index;
+- (void)loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 
 @optional
 - (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index;
+@end
+
+@protocol V_SlideCardDelegate<NSObject>
+
+@optional
+
+- (void)slideCardCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction;
+- (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell;
+- (void)slideCardCellDidChangedState:(V_SlideCardCell *)cell;
+
+- (void)didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
+
 @end

@@ -1,14 +1,14 @@
 //
-//  M_SlideCard.m
+//  M_TanTan.m
 //  TanTanDemo
 //
 //  Created by zhujiamin on 2016/11/16.
 //  Copyright © 2016年 zhujiamin. All rights reserved.
 //
 
-#import "M_SlideCard.h"
+#import "M_TanTan.h"
 
-@implementation M_SlideCard
+@implementation M_TanTan
 - (instancetype)initWithImage:(NSString *)imageName
                       andName:(NSString *)userName
              andConstellation:(NSString *)constellation
