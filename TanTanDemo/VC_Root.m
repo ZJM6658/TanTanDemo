@@ -11,7 +11,7 @@
 #import "M_TanTan.h"
 #import "V_TanTan.h"
 
-@interface VC_Root ()<V_SlideCardDataSource, V_SlideCardDelegate> {
+@interface VC_Root ()<V_SlideCardDataSource, V_SlideCardDelegate, UICollectionViewDelegate> {
     NSInteger _pageNo;//数据页码
     CGFloat _buttonWidth;
 
@@ -90,13 +90,15 @@
     }
 }
 
+- (void)slideCardCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
+    [self resetButton];
+}
+
 - (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell {
     [self resetButton];
 }
 
-- (void)slideCardCellDidChangedState:(V_SlideCardCell *)cell {
-    [self resetButton];
-}
+
 
 - (void)resetButton {
     [UIView animateWithDuration:0.3 animations:^{

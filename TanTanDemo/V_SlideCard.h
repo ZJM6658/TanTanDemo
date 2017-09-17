@@ -38,13 +38,14 @@
 - (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index;
 @end
 
+
+
 @protocol V_SlideCardDelegate<NSObject>
-
 @optional
-
 - (void)slideCardCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction;
+- (void)slideCardCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index;
+
 - (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell;
-- (void)slideCardCellDidChangedState:(V_SlideCardCell *)cell;
 
 - (void)didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 

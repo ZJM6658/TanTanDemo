@@ -10,8 +10,8 @@
 
 @interface V_SlideCard () <V_SlideCardCellDelegate> {
     CGFloat _cardNumber;//创建的cell数量
-    CGFloat _showingCardNumber;
-    BOOL _isCellAnimating;
+    CGFloat _showingCardNumber;//显示中的cell
+    BOOL _isCellAnimating;//是否在动画中
 }
 
 @property (nonatomic, strong) NSMutableArray<V_SlideCardCell *> *underCells;
@@ -90,7 +90,7 @@
 }
 
 - (Class)currentClass {
-    if (self.cellClassName) {
+    if (self.cellClassName.length > 0) {
         Class cellClass = NSClassFromString(self.cellClassName);
         NSAssert([cellClass isSubclassOfClass:[V_SlideCardCell class]], @"必须先调用registerCellClassName:设置自定义cell class，且必须继承自V_SlideCardCell");
 
@@ -123,8 +123,8 @@
 
 - (void)stateChangeAction:(NSNotification *)notification {
 #warning 这里应该返回向左划了  还是右划了
-    if ([self.delegate respondsToSelector:@selector(slideCardCellDidChangedState:)]) {
-        [self.delegate slideCardCellDidChangedState:nil];
+    if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)]) {
+        [self.delegate slideCardCell:nil didChangedStateWithDirection:0 atIndex:self.latestItemIndex];
     }
 }
 
