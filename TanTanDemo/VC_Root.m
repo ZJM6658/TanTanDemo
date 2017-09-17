@@ -14,6 +14,7 @@
 @interface VC_Root ()<V_SlideCardDataSource, V_SlideCardDelegate, UICollectionViewDelegate> {
     NSInteger _pageNo;//数据页码
     CGFloat _buttonWidth;
+    CGFloat _buttonBorderWidth;
 
 }
 
@@ -31,8 +32,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pageNo = 0;
-    _buttonWidth = 60;
-
+    _buttonWidth = 70;
+    _buttonBorderWidth = 8;
+    
     self.view.height -= 64;
     self.edgesForExtendedLayout = UIRectEdgeNone;
     self.extendedLayoutIncludesOpaqueBars = NO;
@@ -82,29 +84,42 @@
 
 #pragma mark - V_SlideCardDelegate
 
-- (void)slideCardCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction {
+- (void)slideCardCell:(V_TanTan *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction {
+    
+    NSLog(@"panpercent= %f, state%d", percent, (int)cell.currentState);
     if (direction == PanDirectionRight) {
-        self.btn_like.layer.borderWidth = 5 * (1 - percent);
+        cell.iv_like.alpha = percent;
+        self.btn_like.layer.borderWidth = _buttonBorderWidth * (1 - percent);
     } else {
-        self.btn_hate.layer.borderWidth = 5 * (1 - percent);
+        cell.iv_hate.alpha = percent;
+        self.btn_hate.layer.borderWidth = _buttonBorderWidth * (1 - percent);
     }
 }
 
-- (void)slideCardCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
-    [self resetButton];
+- (void)slideCardCell:(V_TanTan *)cell willScrollToDirection:(PanDirection)direction {
+    if (direction == PanDirectionRight) {
+        cell.iv_like.alpha = 1;
+    } else {
+        cell.iv_hate.alpha = 1;
+    }
 }
 
-- (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell {
-    [self resetButton];
+- (void)slideCardCell:(V_TanTan *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
+    [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
+        self.btn_like.layer.borderWidth = _buttonBorderWidth;
+        self.btn_hate.layer.borderWidth = _buttonBorderWidth;
+        cell.iv_like.alpha = 0;
+        cell.iv_hate.alpha = 0;
+    } completion:nil];
 }
 
-
-
-- (void)resetButton {
-    [UIView animateWithDuration:0.3 animations:^{
-        self.btn_like.layer.borderWidth = 5;
-        self.btn_hate.layer.borderWidth = 5;
-    }];
+- (void)slideCardCellDidResetFrame:(V_TanTan *)cell {
+    [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
+        self.btn_like.layer.borderWidth = _buttonBorderWidth;
+        self.btn_hate.layer.borderWidth = _buttonBorderWidth;
+        cell.iv_like.alpha = 0;
+        cell.iv_hate.alpha = 0;
+    } completion:nil];
 }
 
 #pragma mark - private methods
@@ -127,17 +142,7 @@
 - (NSMutableArray *)listData {
     if (_listData == nil) {
         _listData = [[NSMutableArray alloc] init];
-        
         _listData = [[self getDataSourceWithPageNo:0] copy];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan3" andName:@"陈1" andConstellation:@"狮子座" andJob:@"演员" andDistance:nil andAge:@"32岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan2" andName:@"郑2" andConstellation:@"摩羯座" andJob:@"歌手" andDistance:@"3km" andAge:@"23岁"]];
-        //
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan3" andName:@"张3" andConstellation:@"处女座" andJob:@"AV演员" andDistance:nil andAge:@"26岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan1" andName:@"李4" andConstellation:@"双子座" andJob:@"演员" andDistance:@"1000km" andAge:@"41岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan3" andName:@"王5" andConstellation:@"狮子座" andJob:@"演员" andDistance:nil andAge:@"32岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan2" andName:@"赵6" andConstellation:@"摩羯座" andJob:@"歌手" andDistance:@"3km" andAge:@"23岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan3" andName:@"任7" andConstellation:@"处女座" andJob:@"AV演员" andDistance:nil andAge:@"26岁"]];
-        //        [_listData addObject:[[M_TanTan alloc] initWithImage:@"tantan1" andName:@"孙8" andConstellation:@"双子座" andJob:@"演员" andDistance:@"1000km" andAge:@"41岁"]];
     }
     return _listData;
 }
@@ -158,8 +163,8 @@
     if (_btn_like == nil) {
         _btn_like = [[UIButton alloc] initWithFrame:CGRectMake((self.view.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.view.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
         [_btn_like setBackgroundImage:[UIImage imageNamed:@"likeWhole"] forState:UIControlStateNormal];
-        _btn_like.layer.borderColor = [UIColor grayColor].CGColor;
-        _btn_like.layer.borderWidth = 5;
+        _btn_like.layer.borderColor = [UIColor colorWithWhite:0.2 alpha:0.9].CGColor;
+        _btn_like.layer.borderWidth = _buttonBorderWidth;
         _btn_like.layer.masksToBounds = YES;
         _btn_like.layer.cornerRadius = _buttonWidth / 2;
         _btn_like.tag = 520;
@@ -172,8 +177,8 @@
     if (_btn_hate == nil) {
         _btn_hate = [[UIButton alloc] initWithFrame:CGRectMake((self.view.width - _buttonWidth * 2) / 3, self.view.height - _buttonWidth - 30, _buttonWidth, _buttonWidth)];
         [_btn_hate setBackgroundImage:[UIImage imageNamed:@"hateWhole"] forState:UIControlStateNormal];
-        _btn_hate.layer.borderColor = [UIColor grayColor].CGColor;
-        _btn_hate.layer.borderWidth = 5;
+        _btn_hate.layer.borderColor = [UIColor colorWithWhite:0.2 alpha:0.9].CGColor;
+        _btn_hate.layer.borderWidth = _buttonBorderWidth;
         _btn_hate.layer.masksToBounds = YES;
         _btn_hate.layer.cornerRadius = _buttonWidth / 2;
         _btn_hate.tag = 521;

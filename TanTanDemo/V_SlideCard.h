@@ -43,6 +43,9 @@
 @protocol V_SlideCardDelegate<NSObject>
 @optional
 - (void)slideCardCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction;
+
+- (void)slideCardCell:(V_SlideCardCell *)cell willScrollToDirection:(PanDirection)direction;
+
 - (void)slideCardCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index;
 
 - (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell;

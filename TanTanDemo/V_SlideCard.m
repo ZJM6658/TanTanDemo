@@ -20,10 +20,21 @@
 @property (nonatomic, strong) UIButton  *btn_nodata;
 @property (nonatomic, strong) NSString *cellClassName;
 
+@property (nonatomic, strong) V_SlideCardCell *topCard;
+@property (nonatomic, strong) UIPanGestureRecognizer *panGesture;
+
 @end
 
 @implementation V_SlideCard
 
+- (UIPanGestureRecognizer *)panGesture {
+    if (_panGesture == nil) {
+        _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
+        _panGesture.maximumNumberOfTouches = 1;
+        _panGesture.minimumNumberOfTouches = 1;
+    }
+    return _panGesture;
+}
 #pragma mark - life cycle
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -70,6 +81,7 @@
         V_SlideCardCell *cell = self.underCells[i];
         [cell removeFromSuperview];
         [self addSubview:cell];
+        [cell removeGestureRecognizer:self.panGesture];
         [self.dataSource loadNewDataInCell:cell atIndex:i];
         cell.alpha = 1;
 
@@ -78,7 +90,13 @@
         
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.8 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             cell.currentState = i;
-        } completion:nil];
+        } completion:^(BOOL finished) {
+            //添加拖拽手势
+            if (i == FirstCard) {
+                [cell addGestureRecognizer:self.panGesture];
+                self.topCard = cell;
+            }
+        }];
         
         self.latestItemIndex = i;
     }
@@ -99,32 +117,146 @@
     return [V_SlideCardCell class];
 }
 
+#pragma mark - UIPanGestureRecognizer
+- (void)panUserAction:(UIPanGestureRecognizer *)sender {
+    V_SlideCardCell *topCell = (V_SlideCardCell *)sender.view;
+    if (_isCellAnimating == NO && topCell.currentState == FirstCard) {
+        CGPoint oldCenter = topCell.center;
+        //横、纵坐标转换在父视图上拖动了多少像素
+        CGPoint translation = [sender translationInView:self];
+        topCell.center = CGPointMake(oldCenter.x + translation.x, oldCenter.y + translation.y);
+        [sender setTranslation:CGPointZero inView:self];
+        
+        CGPoint newCenter = topCell.center;
+        if (sender.state == UIGestureRecognizerStateChanged) {
+            CGFloat percentX = (newCenter.x - topCell.originalCenter.x) / DROP_DISTANCE;
+            CGFloat percentY = (newCenter.y - topCell.originalCenter.y) / DROP_DISTANCE;
+            
+            //这里需要发送的是x／y的变化较大者的绝对值，且轻微移动不做缩放操作 绝对值 -0.15
+            CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
+            sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+            
+            PanDirection direction = (percentX > 0) ? PanDirectionRight : PanDirectionLeft;
+            [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:fabs(percentX)], DIRECTION:@(direction)}];
+        } else if (sender.state == UIGestureRecognizerStateEnded) {
+            CGFloat offsetX = newCenter.x - topCell.originalCenter.x;
+            if (fabs(offsetX) > DROP_DISTANCE) {
+                PanDirection direction = (offsetX > 0) ? PanDirectionRight : PanDirectionLeft;
+                [self setTopCardScrollToDirection:direction fromClick:NO];
+            } else {
+                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
+            }
+        }
+    }
+}
+
+- (void)setTopCardScrollToDirection:(PanDirection)direction fromClick:(BOOL)fromClick{
+    for (V_SlideCardCell *cell in self.underCells) {
+        if (fromClick) {
+            //按钮点击的时候页面上的按钮需要有体现
+            if (cell.currentState == FirstCard) {
+                if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)]) {
+                    [self.delegate slideCardCell:cell willScrollToDirection:direction];
+                }
+            }
+            
+            _isCellAnimating = YES;
+#warning 这个动画时间可能有点长，找时间再调
+            [UIView animateKeyframesWithDuration:0.7 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
+                [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
+                    //FirstCard先回撤
+                    if (cell.currentState == FirstCard) {
+                        CGFloat angle = 5.0 / 180 * M_PI;
+                        CGFloat centerOffsetX = 10;
+                        if (direction == PanDirectionRight) {
+                            angle = - angle;
+                            centerOffsetX = - centerOffsetX;
+                        }
+                        cell.center = CGPointMake(cell.center.x + centerOffsetX, cell.center.y);
+                        cell.transform = CGAffineTransformMakeRotation(angle);
+                    }
+                }];
+                [UIView addKeyframeWithRelativeStartTime:1/4.0 relativeDuration:1/4.0 animations:^{
+                    //FirstCard再恢复原位
+                    if (cell.currentState == FirstCard) {
+                        cell.center = cell.originalCenter;
+                        cell.transform = CGAffineTransformMakeRotation(0);
+                    }
+                }];
+                //正常调用moveAction
+                [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
+                    CGFloat percentX = (0 - cell.originalCenter.x) / DROP_DISTANCE;
+                    CGFloat moveToX = - SCRW;
+                    if (direction == PanDirectionRight) {
+                        percentX = (SCRW - cell.originalCenter.x) / DROP_DISTANCE;
+                        moveToX = SCRW * 2;
+                    }
+                    CGFloat sendPercent = fabs(percentX);
+                    sendPercent = sendPercent >= 1 ? 1 : sendPercent;
+                    [cell moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
+                }];
+            } completion:^(BOOL finished) {
+                [self changedStateCell:cell withDirection:direction fromClick:fromClick];
+            }];
+        } else {
+            [self changedStateCell:cell withDirection:direction fromClick:fromClick];
+        }
+    }
+}
+
+//动画结束
+- (void)changedStateCell:(V_SlideCardCell *)cell withDirection:(PanDirection)direction fromClick:(BOOL)fromClick {
+    if (cell.currentState == FirstCard) {
+        CGPoint toPoint = CGPointMake(- SCRW, cell.originalCenter.y);
+        NSTimeInterval duration = fromClick ? 0 : 0.3;
+
+        if (direction == PanDirectionRight) {
+            toPoint = CGPointMake(SCRW * 2, cell.originalCenter.y);
+        }
+        
+        _isCellAnimating = YES;
+        [UIView animateWithDuration:duration animations:^{
+            cell.center = toPoint;
+            cell.transform = CGAffineTransformMakeRotation(0);
+            cell.alpha = 0;
+        } completion:^(BOOL finished) {
+            if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)]) {
+                [self.delegate slideCardCell:cell didChangedStateWithDirection:direction atIndex:self.latestItemIndex];
+            }
+            cell.currentState = OtherCard;
+            [self loadNewData:cell];
+            _isCellAnimating = NO;
+        }];
+    } else {
+        NSInteger toState = cell.currentState - 1;
+        cell.currentState = toState;
+        if (toState == FirstCard) {
+            [cell addGestureRecognizer:self.panGesture];
+            self.topCard = cell;
+        }
+    }
+}
+
 #pragma mark - notification
 
 - (void)addAllObserver {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
 }
 
 - (void)moveAction:(NSNotification *)notification {
     NSDictionary *object = notification.object;
-    CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];    
+    CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];
+    PanDirection direction = [[object objectForKey:DIRECTION] integerValue];
     if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)]) {
-        [self.delegate slideCardCell:nil didPanPercent:fabs(percentX) withDirection:(percentX > 0) ? PanDirectionRight : PanDirectionLeft];
+        [self.delegate slideCardCell:self.topCard didPanPercent:percentX withDirection:direction];
     }
 }
 
 - (void)resetFrame:(NSNotification *)notification {
     if ([self.delegate respondsToSelector:@selector(slideCardCellDidResetFrame:)]) {
-        [self.delegate slideCardCellDidResetFrame:nil];
-    }
-}
-
-- (void)stateChangeAction:(NSNotification *)notification {
-#warning 这里应该返回向左划了  还是右划了
-    if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)]) {
-        [self.delegate slideCardCell:nil didChangedStateWithDirection:0 atIndex:self.latestItemIndex];
+        [self.delegate slideCardCellDidResetFrame:self.topCard];
     }
 }
 
@@ -132,29 +264,17 @@
 
 - (void)animateTopCardToDirection:(PanDirection)direction {
     if (_isCellAnimating) return;
-    
-    BOOL choosedLike = NO;
-    NSInteger toCenterX = 0;
-    if (direction == PanDirectionRight) {
-        choosedLike = YES;
-        toCenterX = SCRW;
-    }
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike), @"CLICK": @YES}];
+    [self setTopCardScrollToDirection:direction fromClick:YES];
 }
 
 - (void)loadMoreData {
-//    加载下一组数据
+    //加载下一组数据
     if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
         [self.dataSource loadNewData];
     }
 }
 
 #pragma mark - V_SlideCardCellDelegate
-
-- (BOOL)isAnimating {
-    return _isCellAnimating;
-}
 
 - (void)setAnimatingState:(BOOL)animating {
     _isCellAnimating = animating;
@@ -203,7 +323,7 @@
     if ([self.dataSource respondsToSelector:@selector(slideCard:sizeForItemAtIndex:)]) {
         return [self.dataSource slideCard:self sizeForItemAtIndex:index];
     }
-    return CGSizeMake(self.width - 30, self.height - 150);
+    return self.frame.size;
 }
 
 #pragma mark - setter

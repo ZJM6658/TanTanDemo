@@ -14,8 +14,7 @@
 @property (nonatomic)         CGFloat       signAlpha;
 
 @property (nonatomic, strong) UIImageView   *iv_user;
-@property (nonatomic, strong) UIImageView   *iv_like;
-@property (nonatomic, strong) UIImageView   *iv_hate;
+
 @property (nonatomic, strong) UILabel       *lb_name;
 @property (nonatomic, strong) UILabel       *lb_age;
 @property (nonatomic, strong) UILabel       *lb_constellation;

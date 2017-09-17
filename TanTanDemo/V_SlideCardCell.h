@@ -26,6 +26,7 @@ typedef NS_ENUM(NSInteger, CardState) {
 @interface V_SlideCardCell : UIView
 
 @property (nonatomic, strong) UIView *contentView;
+@property (nonatomic, readonly) CGPoint originalCenter;
 
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
 
@@ -37,12 +38,14 @@ typedef NS_ENUM(NSInteger, CardState) {
 - (void)hideToLeft;
 - (void)setUpConfig;
 - (void)initUI;
+
+- (void)moveWithParams:(NSDictionary *)params;
+
 @end
 
 @protocol V_SlideCardCellDelegate <NSObject>
 
 - (void)setAnimatingState:(BOOL)animating;
-- (BOOL)isAnimating;
 
 - (void)loadNewData:(V_SlideCardCell *)cell;
 

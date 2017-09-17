@@ -14,4 +14,7 @@
 
 @property (nonatomic, strong) M_TanTan   *dataItem;
 
+@property (nonatomic, strong) UIImageView   *iv_like;
+@property (nonatomic, strong) UIImageView   *iv_hate;
+
 @end

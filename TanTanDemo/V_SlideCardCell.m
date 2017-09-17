@@ -11,7 +11,7 @@
 
 @interface V_SlideCardCell ()
 
-@property (nonatomic)         CGPoint       originalCenter;
+@property (nonatomic, readwrite) CGPoint originalCenter;
 
 //获取当前实际缩放的state  第三个卡片及以后的缩放比例状态值一样
 @property (nonatomic) NSInteger     frameState;
@@ -44,51 +44,7 @@
 }
 
 - (void)setUpConfig {
-    //添加拖拽手势
-    UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
-    panGesture.maximumNumberOfTouches = 1;
-    panGesture.minimumNumberOfTouches = 1;
-    [self addGestureRecognizer:panGesture];
-    
     [self addAllObserver];
-}
-
-#pragma mark - UIPanGestureRecognizer
-- (void)panUserAction:(UIPanGestureRecognizer *)sender {
-    if (self.currentState != FirstCard) {
-        return;
-    }
-    
-    if ([self.delegate isAnimating] == NO) {
-        CGPoint center = self.center;
-        //横坐标上、纵坐标上拖动了多少像素
-        CGPoint translation = [sender translationInView:self.superview];
-        sender.view.center = CGPointMake(center.x + translation.x, center.y + translation.y);
-        [sender setTranslation:CGPointZero inView:self.superview];
-        CGPoint newCenter = sender.view.center;
-        
-        if (sender.state == UIGestureRecognizerStateChanged) {
-            CGFloat percentX = (newCenter.x - self.originalCenter.x) / DROP_DISTANCE;
-            CGFloat percentY = (newCenter.y - self.originalCenter.y) / DROP_DISTANCE;
-            
-            //这里需要发送的是x／y的变化较大者的绝对值
-            CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
-            //轻微移动不做缩放操作 绝对值 -0.15
-            sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
-            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-            [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX]}];
-        } else if (sender.state == UIGestureRecognizerStateEnded) {
-            if (fabs(newCenter.x - self.originalCenter.x) > DROP_DISTANCE) {
-                BOOL choosedLike = NO;
-                if ((newCenter.x - self.originalCenter.x) > 0) {
-                    choosedLike = YES;
-                }
-                [[NSNotificationCenter defaultCenter] postNotificationName:STATECHANGE object:@{@"RESULT":@(choosedLike)}];
-            } else {
-                [[NSNotificationCenter defaultCenter] postNotificationName:RESETFRAME object:nil];
-            }
-        }
-    }
 }
 
 - (void)dealloc {
@@ -101,7 +57,6 @@
 - (void)addAllObserver {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moveAction:) name:MOVEACTION object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetFrame:) name:RESETFRAME object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stateChangeAction:) name:STATECHANGE object:nil];
 }
 
 - (void)moveAction:(NSNotification *)notification {
@@ -125,9 +80,6 @@
             angle = (moveToX / width - 1)  * M_PI_4 / 2;
         }
         self.transform = CGAffineTransformMakeRotation(angle);
-        
-        CGFloat percentX = [[params objectForKey:PERCENTX] floatValue];
-//        [self setSignAlpha:percentX];
     } else {
         //中间cell 缩放+位移
         CGFloat percentMain = [[params objectForKey:PERCENTMAIN] floatValue];
@@ -139,97 +91,6 @@
     }
 }
 
-- (void)stateChangeAction:(NSNotification *)notification {
-    BOOL choosedLike = [[notification.object objectForKey:@"RESULT"] boolValue];
-    BOOL isClickButton = [[notification.object objectForKey:@"CLICK"] boolValue];
-
-    if (isClickButton) {
-        if (self.currentState == FirstCard) {
-            [self.delegate setAnimatingState:YES];
-        }
-#warning 这个动画时间可能有点长，找时间再调
-        [UIView animateKeyframesWithDuration:0.8 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
-            [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
-                //FirstCard先回撤
-                if (self.currentState == FirstCard) {
-                    CGFloat angle = 5.0 / 180 * M_PI;
-                    CGFloat centerOffsetX = 10;
-                    if (choosedLike) {
-                        angle = - angle;
-                        centerOffsetX = - centerOffsetX;
-                    }
-                    self.center = CGPointMake(self.center.x + centerOffsetX, self.center.y);
-                    self.transform = CGAffineTransformMakeRotation(angle);
-                }
-            }];
-            [UIView addKeyframeWithRelativeStartTime:1/4.0 relativeDuration:1/4.0 animations:^{
-                //FirstCard再恢复原位
-                if (self.currentState == FirstCard) {
-                    self.center = self.originalCenter;
-                    self.transform = CGAffineTransformMakeRotation(0);
-                }
-            }];
-            [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
-                CGFloat percentX = (0 - self.originalCenter.x) / DROP_DISTANCE;
-                CGFloat moveToX = - SCRW;
-                if (choosedLike) {
-                    percentX = (SCRW - self.originalCenter.x) / DROP_DISTANCE;
-                    moveToX = SCRW * 2;
-                }
-                CGFloat sendPercent = fabs(percentX);
-                sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-                [self moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
-            }];
-        } completion:^(BOOL finished) {
-            [self stateChangeWithLike:choosedLike isClick:YES];
-        }];
-    } else {
-        [self stateChangeWithLike:choosedLike isClick:NO];
-    }
-}
-
-- (void)stateChangeWithLike:(BOOL)choosedLike isClick:(BOOL)isClick{
-    if (self.currentState == FirstCard) {
-        if (choosedLike) {
-            [self likeActionWithDuration:isClick ? 0 : 0.3];
-        } else {
-            [self hateActionWithDuration:isClick ? 0 : 0.3];
-        }
-    } else {
-        [self shouldDoSomethingWithState:self.currentState - 1];
-    }
-}
-
-- (void)likeActionWithDuration:(NSTimeInterval)duration {
-    CGPoint toPoint = CGPointMake(SCRW * 2, self.originalCenter.y);
-//    self.iv_like.alpha = 1;
-    [self.delegate setAnimatingState:YES];
-    [UIView animateWithDuration:duration animations:^{
-        self.center = toPoint;
-        self.transform = CGAffineTransformMakeRotation(0);
-//        [self setSignAlpha:0];
-        self.alpha = 0;
-    } completion:^(BOOL finished) {
-        [self shouldDoSomethingWithState:OtherCard];
-        [self.delegate setAnimatingState:NO];
-    }];
-}
-
-- (void)hateActionWithDuration:(NSTimeInterval)duration {
-    CGPoint toPoint = CGPointMake(- SCRW, self.originalCenter.y);
-//    self.iv_hate.alpha = 1;
-    [self.delegate setAnimatingState:YES];
-    [UIView animateWithDuration:duration animations:^{
-        self.center = toPoint;
-        self.transform = CGAffineTransformMakeRotation(0);
-        self.alpha = 0;
-    } completion:^(BOOL finished) {
-//        [self setSignAlpha:0];
-        [self shouldDoSomethingWithState:OtherCard];
-        [self.delegate setAnimatingState:NO];
-    }];
-}
-
 - (void)resetFrame:(NSNotification *)notification {
     if (self.currentState == FirstCard) {
         [self.delegate setAnimatingState:YES];
@@ -238,7 +99,6 @@
         if (self.currentState == FirstCard) {
             self.center = self.originalCenter;
             self.transform = CGAffineTransformMakeRotation(0);
-//            [self setSignAlpha:0];
         } else {
             self.center = self.originalCenter;
             CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE;
@@ -249,15 +109,6 @@
             [self.delegate setAnimatingState:NO];
         }
     }];
-}
-
-- (void)shouldDoSomethingWithState:(CardState)state {
-    self.currentState = state;
-    if (self.currentState == OtherCard) {
-        if ([self.delegate respondsToSelector:@selector(loadNewData:)]) {
-            [self.delegate loadNewData:self];
-        }
-    }
 }
 
 #pragma mark - outside methods
