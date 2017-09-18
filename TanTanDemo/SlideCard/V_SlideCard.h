@@ -13,12 +13,15 @@
 
 @interface V_SlideCard : UIView
 
-
+/** 拖拽翻页的阀值，默认是100*/
+@property (nonatomic) CGFloat panDistance;
+/** cell的大小*/
 @property (nonatomic) CGSize cellSize;
 /** cell默认在中心的位置 设置celloffsetY控制cell的中心的Y值*/
+#warning 这个字段设置的早晚也要考虑到cell刷新的问题
 @property (nonatomic) CGFloat celloffsetY;
 //shadow enable
-@property (nonatomic) BOOL enableShadow;
+@property (nonatomic) BOOL enableShadow __deprecated;
 
 @property (nonatomic, weak)   id<V_SlideCardDelegate>       delegate;
 @property (nonatomic, weak)   id<V_SlideCardDataSource>     dataSource;

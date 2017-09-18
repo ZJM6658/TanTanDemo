@@ -47,7 +47,8 @@
 }
 
 - (void)setUpConfig {
-    self.latestItemIndex = 0;
+    _latestItemIndex = 0;
+    _panDistance = 100;
     _cardNumber = 4;
     _showingCardNumber = _cardNumber;
     _isCellAnimating = NO;
@@ -127,8 +128,8 @@
         
         CGPoint newCenter = topCell.center;
         if (sender.state == UIGestureRecognizerStateChanged) {
-            CGFloat percentX = (newCenter.x - topCell.originalCenter.x) / DROP_DISTANCE;
-            CGFloat percentY = (newCenter.y - topCell.originalCenter.y) / DROP_DISTANCE;
+            CGFloat percentX = (newCenter.x - topCell.originalCenter.x) / _panDistance;
+            CGFloat percentY = (newCenter.y - topCell.originalCenter.y) / _panDistance;
             
             //这里需要发送的是x／y的变化较大者的绝对值，且轻微移动不做缩放操作 绝对值 -0.15
             CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
@@ -139,7 +140,7 @@
             [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:fabs(percentX)], DIRECTION:@(direction)}];
         } else if (sender.state == UIGestureRecognizerStateEnded) {
             CGFloat offsetX = newCenter.x - topCell.originalCenter.x;
-            if (fabs(offsetX) > DROP_DISTANCE) {
+            if (fabs(offsetX) > _panDistance) {
                 PanDirection direction = (offsetX > 0) ? PanDirectionRight : PanDirectionLeft;
                 [self setTopCardScrollToDirection:direction fromClick:NO];
             } else {
@@ -180,7 +181,7 @@
     
     _isCellAnimating = YES;
 #warning 这个动画时间可能有点长，找时间再调 可以让cell移动距离小点，刚好移出屏外 缩短时间
-    [UIView animateKeyframesWithDuration:0.7 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
+    [UIView animateKeyframesWithDuration:0.5 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
         [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
             //FirstCard先回撤
             if (cell.currentState == FirstCard) {
@@ -203,11 +204,11 @@
         }];
         //正常调用moveAction
         [UIView addKeyframeWithRelativeStartTime:1/2.0 relativeDuration:1/2.0 animations:^{
-            CGFloat percentX = (0 - cell.originalCenter.x) / DROP_DISTANCE;
-            CGFloat moveToX = - SCRW;
+            CGFloat percentX = (0 - cell.originalCenter.x) / _panDistance;
+            CGFloat moveToX = - SCRW / 2 * 3;
             if (direction == PanDirectionRight) {
-                percentX = (SCRW - cell.originalCenter.x) / DROP_DISTANCE;
-                moveToX = SCRW * 2;
+                percentX = (SCRW - cell.originalCenter.x) / _panDistance;
+                moveToX = SCRW / 2 * 3;
             }
             CGFloat sendPercent = fabs(percentX);
             sendPercent = sendPercent >= 1 ? 1 : sendPercent;

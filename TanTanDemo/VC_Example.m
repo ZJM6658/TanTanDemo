@@ -186,14 +186,16 @@
 - (V_SlideCard *)slideCard {
     if (_slideCard == nil) {
         _slideCard = [[V_SlideCard alloc] initWithFrame:self.view.bounds];
-        _slideCard.cellSize = CGSizeMake(350, 400);
         
+        _slideCard.cellSize = CGSizeMake(350, 400);
+
         NSString *cellClassName = @"";
         if (self.exampleType == ExampleTypeTanTan) {
             cellClassName = @"V_TanTan";
             _slideCard.celloffsetY = - 100;
         } else if (self.exampleType == ExampleTypeBoss) {
             cellClassName = @"V_BossJob";
+            _slideCard.cellSize = CGSizeMake(280, 330);
         }
         
         [_slideCard registerCellClassName:cellClassName];
