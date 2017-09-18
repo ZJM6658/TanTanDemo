@@ -9,8 +9,8 @@
 #import "V_SlideCard.h"
 
 @interface V_SlideCard () <V_SlideCardCellDelegate> {
-    CGFloat _cardNumber;//创建的cell数量
-    CGFloat _showingCardNumber;//显示中的cell
+    NSInteger _cardNumber;//创建的cell数量
+    NSInteger _showingCardNumber;//显示中的cell
     BOOL _isCellAnimating;//是否在动画中
 }
 
@@ -63,10 +63,16 @@
 }
 
 - (void)layoutSlideCards {
+    for (V_SlideCardCell *cell in self.underCells) {
+        [cell removeFromSuperview];
+    }
     [self.underCells removeAllObjects];
-    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
     for (NSInteger i = 0; i < _cardNumber; i ++) {
-        CGSize cellSize = [self slideCard:self sizeForItemAtIndex:i];;
+        CGSize cellSize = self.cellSize;
+        if (cellSize.width <= 0 || self.cellSize.height <= 0) {
+            cellSize = self.frame.size;
+        }
         V_SlideCardCell *cell = [[[self currentClass] alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
         cell.cellMarginY = cellSize.height * TRANSFORM_SPACE - 5;
         cell.delegate = self;
@@ -84,7 +90,9 @@
         [cell removeFromSuperview];
         [self addSubview:cell];
         [cell removeGestureRecognizer:self.panGesture];
-        [self.dataSource loadNewDataInCell:cell atIndex:i];
+        if ([self shouldCallDelegateOrDataSource:cell]) {
+            [self.dataSource loadNewDataInCell:cell atIndex:i];
+        }
         cell.alpha = 1;
 
         //先设置到左边 再动画进入
@@ -102,21 +110,6 @@
         
         self.latestItemIndex = i;
     }
-}
-
-- (void)registerCellClassName:(NSString *)aClassName {
-    self.cellClassName = aClassName;
-    [self layoutSlideCards];
-}
-
-- (Class)currentClass {
-    if (self.cellClassName.length > 0) {
-        Class cellClass = NSClassFromString(self.cellClassName);
-        NSAssert([cellClass isSubclassOfClass:[V_SlideCardCell class]], @"必须先调用registerCellClassName:设置自定义cell class，且必须继承自V_SlideCardCell");
-
-        return cellClass;
-    }
-    return [V_SlideCardCell class];
 }
 
 #pragma mark - UIPanGestureRecognizer
@@ -163,11 +156,21 @@
     }
 }
 
+- (BOOL)shouldCallDelegateOrDataSource:(V_SlideCardCell *)cell {
+    if (self.cellClassName.length > 0) {
+        Class class = NSClassFromString(self.cellClassName);
+        if ([cell isKindOfClass:class]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 //直接动画翻页后状态变更
 - (void)scrollCell:(V_SlideCardCell *)cell toDirection:(PanDirection)direction {
     //按钮点击的时候页面上的按钮需要有体现
     if (cell.currentState == FirstCard) {
-        if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)]) {
+        if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)] && [self shouldCallDelegateOrDataSource:cell]) {
             [self.delegate slideCardCell:cell willScrollToDirection:direction];
         }
     }
@@ -227,7 +230,7 @@
             cell.transform = CGAffineTransformMakeRotation(0);
             cell.alpha = 0;
         } completion:^(BOOL finished) {
-            if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)]) {
+            if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)] && [self shouldCallDelegateOrDataSource:cell]) {
                 [self.delegate slideCardCell:cell didChangedStateWithDirection:direction atIndex:self.latestItemIndex];
             }
             cell.currentState = OtherCard;
@@ -255,13 +258,13 @@
     NSDictionary *object = notification.object;
     CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];
     PanDirection direction = [[object objectForKey:DIRECTION] integerValue];
-    if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)]) {
+    if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
         [self.delegate slideCardCell:self.topCard didPanPercent:percentX withDirection:direction];
     }
 }
 
 - (void)resetFrame:(NSNotification *)notification {
-    if ([self.delegate respondsToSelector:@selector(slideCardCellDidResetFrame:)]) {
+    if ([self.delegate respondsToSelector:@selector(slideCardCellDidResetFrame:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
         [self.delegate slideCardCellDidResetFrame:self.topCard];
     }
 }
@@ -275,8 +278,10 @@
 
 - (void)loadMoreData {
     //加载下一组数据
-    if ([self.dataSource respondsToSelector:@selector(loadNewData)]) {
+    if ([self.dataSource respondsToSelector:@selector(loadNewData)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
         [self.dataSource loadNewData];
+    } else {
+        [self reloadData];
     }
 }
 
@@ -290,7 +295,9 @@
     if (self.latestItemIndex + 1 < [self numberOfItemsInSlideCard:self]) {
         self.latestItemIndex += 1;
         [self sendSubviewToBack:cell];
-        [self.dataSource loadNewDataInCell:cell atIndex:self.latestItemIndex];
+        if ([self shouldCallDelegateOrDataSource:cell]) {
+            [self.dataSource loadNewDataInCell:cell atIndex:self.latestItemIndex];
+        }
         [UIView animateWithDuration:0.2 animations:^{
             cell.alpha = 1;
         }];
@@ -319,20 +326,23 @@
 #pragma mark - V_SlideCardDataSource
 
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard {
-    if ([self.dataSource respondsToSelector:@selector(numberOfItemsInSlideCard:)]) {
+    if ([self.dataSource respondsToSelector:@selector(numberOfItemsInSlideCard:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
         return [self.dataSource numberOfItemsInSlideCard:slideCard];
     }
     return _cardNumber;
 }
 
-- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
-    if ([self.dataSource respondsToSelector:@selector(slideCard:sizeForItemAtIndex:)]) {
-        return [self.dataSource slideCard:self sizeForItemAtIndex:index];
-    }
-    return self.frame.size;
+#pragma mark - setter
+
+- (void)registerCellClassName:(NSString *)aClassName {
+    self.cellClassName = aClassName;
+    [self layoutSlideCards];
 }
 
-#pragma mark - setter
+- (void)setCellSize:(CGSize)cellSize {
+    _cellSize = cellSize;
+    [self layoutSlideCards];
+}
 
 - (void)setDataSource:(id<V_SlideCardDataSource>)dataSource {
     _dataSource = dataSource;
@@ -343,6 +353,16 @@
 }
 
 #pragma mark - getter
+
+- (Class)currentClass {
+    if (self.cellClassName.length > 0) {
+        Class cellClass = NSClassFromString(self.cellClassName);
+        NSAssert([cellClass isSubclassOfClass:[V_SlideCardCell class]], @"必须先调用registerCellClassName:设置自定义cell class，且必须继承自V_SlideCardCell");
+        
+        return cellClass;
+    }
+    return [V_SlideCardCell class];
+}
 
 - (NSMutableArray<V_SlideCardCell *> *)underCells {
     if (_underCells == nil) {

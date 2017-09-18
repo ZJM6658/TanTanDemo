@@ -78,10 +78,6 @@
     return self.listData.count;
 }
 
-- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index {
-    return CGSizeMake(350, 400);
-}
-
 #pragma mark - V_SlideCardDelegate
 
 - (void)slideCardCell:(V_TanTan *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction {
@@ -152,7 +148,8 @@
 - (V_SlideCard *)slideCard {
     if (_slideCard == nil) {
         _slideCard = [[V_SlideCard alloc] initWithFrame:self.view.bounds];
-        [_slideCard registerCellClassName:@"V_TanTan"];
+        _slideCard.cellSize = CGSizeMake(350, 400);
+        [_slideCard registerCellClassName:@""];//V_TanTan
         _slideCard.dataSource = self;
         _slideCard.delegate = self;
     }

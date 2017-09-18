@@ -13,6 +13,8 @@
 
 @interface V_SlideCard : UIView
 
+
+@property (nonatomic) CGSize cellSize;
 //cell中心的位置 偏移
 @property (nonatomic) CGFloat celloffsetY;
 //shadow enable
@@ -34,8 +36,6 @@
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
 - (void)loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 
-@optional
-- (CGSize)slideCard:(V_SlideCard *)slideCard sizeForItemAtIndex:(NSInteger)index;
 @end
 
 
