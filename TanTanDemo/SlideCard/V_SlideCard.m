@@ -8,6 +8,8 @@
 
 #import "V_SlideCard.h"
 
+#define SCRW  [[UIScreen mainScreen] bounds].size.width
+
 @interface V_SlideCard () <V_SlideCardCellDelegate> {
     NSInteger _cardNumber;//创建的cell数量
     NSInteger _showingCardNumber;//显示中的cell
@@ -74,6 +76,7 @@
             cellSize = self.frame.size;
         }
         V_SlideCardCell *cell = [[[self currentClass] alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
+        cell.offsetY = self.celloffsetY;
         cell.cellMarginY = cellSize.height * TRANSFORM_SPACE - 5;
         cell.delegate = self;
         [self.underCells addObject:cell];
@@ -176,7 +179,7 @@
     }
     
     _isCellAnimating = YES;
-#warning 这个动画时间可能有点长，找时间再调
+#warning 这个动画时间可能有点长，找时间再调 可以让cell移动距离小点，刚好移出屏外 缩短时间
     [UIView animateKeyframesWithDuration:0.7 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
         [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
             //FirstCard先回撤
@@ -378,7 +381,7 @@
         [_btn_nodata setTitle:@"没有更多数据了\n点击加载下一页" forState:UIControlStateNormal];
         _btn_nodata.titleLabel.numberOfLines = 0;
         [_btn_nodata setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [_btn_nodata setBackgroundColor:[UIColor colorWithRed:220.0/255.0 green:100.0/255.0 blue:50.0/255.0 alpha:1]];
+        [_btn_nodata setBackgroundColor:[UIColor blackColor]];
         _btn_nodata.layer.cornerRadius = 5;
         _btn_nodata.layer.masksToBounds = YES;
         _btn_nodata.hidden = YES;

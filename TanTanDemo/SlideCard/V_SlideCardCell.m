@@ -21,7 +21,7 @@
 @implementation V_SlideCardCell
 
 - (instancetype)init {
-    return [self initWithFrame:CGRectMake(0, 0, SCRW, SCRH)];
+    return [self initWithFrame:[UIScreen mainScreen].bounds];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -48,7 +48,7 @@
 }
 
 - (void)dealloc {
-    NSLog(@"cell dealloc");
+//    NSLog(@"cell dealloc");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -69,7 +69,7 @@
 
     if (self.currentState == FirstCard) {
         //当前cell 旋转+按钮alpha改变
-        CGFloat width = SCRW / 2;
+        CGFloat width = [UIScreen mainScreen].bounds.size.width / 2;
         CGFloat moveToX = self.center.x;
         CGFloat angle = (1 - moveToX / width) * M_PI_4 / 2;
 
@@ -115,7 +115,7 @@
 
 - (void)hideToLeft {
     [self.superview sendSubviewToBack:self];
-    self.center = CGPointMake(- self.height, self.originalCenter.y);
+    self.center = CGPointMake(- self.frame.size.height, self.originalCenter.y);
     self.transform = CGAffineTransformMakeRotation(- M_PI_2);
 }
 
@@ -127,7 +127,7 @@
     _currentState = currentState;
     CGFloat spaceY = self.cellMarginY * self.frameState;
 
-    CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y - 60 + spaceY);
+    CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y + self.offsetY + spaceY);
     self.originalCenter = currentStateCenter;
     self.center = currentStateCenter;
     CGFloat scale = 1 - TRANSFORM_SPACE * self.frameState;
@@ -147,7 +147,7 @@
     if (_contentView == nil) {
         _contentView = [[UIView alloc] initWithFrame:self.bounds];
         _contentView.backgroundColor = [UIColor whiteColor];
-        _contentView.layer.borderColor = RGBA(220, 220, 220, 1).CGColor;
+        _contentView.layer.borderColor = [UIColor colorWithRed:220/255.0 green:220/255.0 blue:220/255.0 alpha:1].CGColor;
         _contentView.layer.borderWidth = 1.0;
         _contentView.layer.cornerRadius = 5.0;
         _contentView.layer.masksToBounds = YES;

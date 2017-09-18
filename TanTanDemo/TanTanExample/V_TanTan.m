@@ -57,7 +57,7 @@
 
 - (UIImageView *)iv_user {
     if (_iv_user == nil) {
-        _iv_user = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.width, self.height - 70)];
+        _iv_user = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height - 70)];
     }
     return _iv_user;
 }
@@ -73,7 +73,7 @@
 
 - (UIImageView *)iv_hate {
     if (_iv_hate == nil) {
-        _iv_hate = [[UIImageView alloc]  initWithFrame:CGRectMake(self.width - 20 - 60, 20, 60, 60)];
+        _iv_hate = [[UIImageView alloc]  initWithFrame:CGRectMake(self.frame.size.width - 20 - 60, 20, 60, 60)];
         _iv_hate.image = [UIImage imageNamed:@"hateLine"];
         _iv_hate.alpha = 0;
     }

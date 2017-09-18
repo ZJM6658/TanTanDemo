@@ -15,7 +15,7 @@
 
 
 @property (nonatomic) CGSize cellSize;
-//cell中心的位置 偏移
+/** cell默认在中心的位置 设置celloffsetY控制cell的中心的Y值*/
 @property (nonatomic) CGFloat celloffsetY;
 //shadow enable
 @property (nonatomic) BOOL enableShadow;

@@ -28,6 +28,9 @@ typedef NS_ENUM(NSInteger, CardState) {
 @property (nonatomic, strong) UIView *contentView;
 @property (nonatomic, readonly) CGPoint originalCenter;
 
+/** 中心Y偏移值*/
+@property (nonatomic) CGFloat offsetY;
+
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
 
 /** cell当前所处的状态 */

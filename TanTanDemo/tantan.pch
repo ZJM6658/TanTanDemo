@@ -12,12 +12,6 @@
 // Include any system framework and library headers here that should be included in all compilation units.
 // You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
 
-/**
- *  屏幕大小
- */
-#define SCRW        [[UIScreen mainScreen] bounds].size.width
-#define SCRH        [[UIScreen mainScreen] bounds].size.height
-
 #define DROP_DISTANCE  100
 #define TRANSFORM_SPACE  0.06
 
@@ -27,10 +21,5 @@
 #define PERCENTMAIN     @"PercentMain"
 #define PERCENTX        @"PercentX"
 #define DIRECTION        @"Direction"
-
-
-#define RGBA(r,g,b,a)     [UIColor colorWithRed:(r)/255.0f green:(g)/255.0f blue:(b)/255.0f alpha:a]
-
-#import "UIView+Extension.h"
 
 #endif /* tantan_pch */
