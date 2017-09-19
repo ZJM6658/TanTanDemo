@@ -180,7 +180,7 @@
     }
     
     _isCellAnimating = YES;
-#warning 这个动画时间可能有点长，找时间再调 可以让cell移动距离小点，刚好移出屏外 缩短时间
+//#warning 这个动画时间可能有点长，找时间再调 可以让cell移动距离小点，刚好移出屏外 缩短时间
     [UIView animateKeyframesWithDuration:0.5 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
         [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
             //FirstCard先回撤

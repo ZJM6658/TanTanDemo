@@ -20,7 +20,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Demo";
-    _rowTitles = @[@"空白控件", @"探探", @"BOSS直聘"];
+    _rowTitles = @[@"空白控件", @"探探", @"BOSS直聘", @"招才猫直聘"];
 }
 
 #pragma mark - Table view data source

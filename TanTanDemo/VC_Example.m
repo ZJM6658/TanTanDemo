@@ -51,10 +51,8 @@
         self.navigationController.navigationBar.translucent = NO;
         self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"消息" style:UIBarButtonItemStylePlain target:self action:@selector(rightBarButtonClick)];
         
-        
         [self.view addSubview:self.btn_like];
         [self.view addSubview:self.btn_hate];
-        
     } else if (self.exampleType == ExampleTypeBoss) {
         self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
         self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
@@ -195,7 +193,7 @@
             _slideCard.celloffsetY = - 100;
         } else if (self.exampleType == ExampleTypeBoss) {
             cellClassName = @"V_BossJob";
-            _slideCard.cellSize = CGSizeMake(280, 330);
+            _slideCard.cellSize = CGSizeMake(320, 350);
         }
         
         [_slideCard registerCellClassName:cellClassName];
