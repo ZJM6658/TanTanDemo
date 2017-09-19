@@ -33,6 +33,8 @@ typedef NS_ENUM(NSInteger, CellOffsetDirection) {
 @property (nonatomic, strong) UIView *contentView;
 @property (nonatomic, readonly) CGPoint originalCenter;
 
+@property (nonatomic) NSInteger index;
+
 @property (nonatomic) CellOffsetDirection offsetDirection;
 
 @property (nonatomic) CGFloat scaleSpace;

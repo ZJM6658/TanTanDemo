@@ -42,14 +42,16 @@
     _buttonWidth = 70;
     _buttonBorderWidth = 8;
     
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(leftBarButtonClick)];
-
+//    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(leftBarButtonClick)];
+//    [item setTintColor:[UIColor blackColor]];
+//    self.navigationItem.leftBarButtonItem = item;
     
     self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.slideCard];//加入滑动组件
     
     if (self.exampleType == ExampleTypeEmpty) {
         self.title = @"空白组件，没有自定义cell内容";
+        [self.view addSubview:self.panInfo];
     } else if (self.exampleType == ExampleTypeTanTan) {
         self.title = @"探探";
         self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
@@ -74,15 +76,9 @@
         
         [self.view addSubview:self.btn_like];
         [self.view addSubview:self.btn_hate];
-    }
-    
+    } else {
 
-//    self.automaticallyAdjustsScrollViewInsets = YES;
-    
-//    self.view.height -= 64;
-//    self.edgesForExtendedLayout = UIRectEdgeNone;
-//    self.extendedLayoutIncludesOpaqueBars = NO;
-//    self.modalPresentationCapturesStatusBarAppearance = NO;
+    }
 }
 
 #pragma mark - event response
@@ -153,10 +149,6 @@
 }
 
 - (void)slideCardCell:(V_TanTan *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
-    
-#warning 底部按钮borderWidth不支持动画，抽时间改成底部有个圆圈，上面有个button改变transform\
-然后按钮点击时也添加个跳动效果
-    
     if (self.exampleType == ExampleTypeTanTan) {
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             self.btn_like.layer.borderWidth = _buttonBorderWidth;
@@ -175,6 +167,13 @@
             cell.iv_like.alpha = 0;
             cell.iv_hate.alpha = 0;
         } completion:nil];
+    }
+}
+
+- (void)didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
+    if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
+        NSLog(@"tantan userName = %@", tantanCell.dataItem.userName);
     }
 }
 
@@ -207,6 +206,7 @@
         NSString *cellClassName = @"";
         if (self.exampleType == ExampleTypeTanTan) {
             cellClassName = @"V_TanTan";
+            _slideCard.panDistance = 150;
         } else if (self.exampleType == ExampleTypeBoss) {
             cellClassName = @"V_BossJob";
             _slideCard.cellSize = CGSizeMake(320, 350);
@@ -283,6 +283,7 @@
     if (_panInfo == nil) {
         _panInfo = [[UILabel alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 80, self.view.frame.size.width, 80)];
         _panInfo.numberOfLines = 0;
+        _panInfo.textAlignment = NSTextAlignmentCenter;
     }
     return _panInfo;
 }

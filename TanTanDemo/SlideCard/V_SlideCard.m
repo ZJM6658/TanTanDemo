@@ -24,19 +24,12 @@
 
 @property (nonatomic, strong) V_SlideCardCell *topCard;
 @property (nonatomic, strong) UIPanGestureRecognizer *panGesture;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGesture;
 
 @end
 
 @implementation V_SlideCard
 
-- (UIPanGestureRecognizer *)panGesture {
-    if (_panGesture == nil) {
-        _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panUserAction:)];
-        _panGesture.maximumNumberOfTouches = 1;
-        _panGesture.minimumNumberOfTouches = 1;
-    }
-    return _panGesture;
-}
 #pragma mark - life cycle
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -98,6 +91,9 @@
         [cell removeFromSuperview];
         [self addSubview:cell];
         [cell removeGestureRecognizer:self.panGesture];
+        [cell removeGestureRecognizer:self.tapGesture];
+
+        cell.index = i;
         if ([self shouldCallDelegateOrDataSource:cell]) {
             [self.dataSource loadNewDataInCell:cell atIndex:i];
         }
@@ -112,6 +108,7 @@
             //添加拖拽手势
             if (i == FirstCard) {
                 [cell addGestureRecognizer:self.panGesture];
+                [cell addGestureRecognizer:self.tapGesture];
                 self.topCard = cell;
             }
         }];
@@ -121,7 +118,8 @@
 }
 
 #pragma mark - UIPanGestureRecognizer
-- (void)panUserAction:(UIPanGestureRecognizer *)sender {
+
+- (void)panCellAction:(UIPanGestureRecognizer *)sender {
     V_SlideCardCell *topCell = (V_SlideCardCell *)sender.view;
     if (_isCellAnimating == NO && topCell.currentState == FirstCard) {
         CGPoint oldCenter = topCell.center;
@@ -135,17 +133,19 @@
             CGFloat percentX = (newCenter.x - topCell.originalCenter.x) / _panDistance;
             CGFloat percentY = (newCenter.y - topCell.originalCenter.y) / _panDistance;
             
-            //这里需要发送的是x／y的变化较大者的绝对值，
-            CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
-            
-            //仅向下层叠时 轻微移动不做缩放操作 绝对值 -0.15
-            if (self.cellOffsetDirection == CellOffsetDirectionBottom) {
-                sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
-            }
-            sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-            
             PanDirection direction = (percentX > 0) ? PanDirectionRight : PanDirectionLeft;
-            [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:fabs(percentX)], DIRECTION:@(direction)}];
+
+            percentX = fabs(percentX);
+            percentY = fabs(percentY);
+            if (percentX > 1) percentX = 1;
+            if (percentY > 1) percentY = 1;
+            
+            //这里需要发送的是x／y的变化较大者的绝对值，
+            CGFloat sendPercent = percentX > percentY ? percentX : percentY;
+            //轻微移动不做缩放操作 绝对值 -0.15
+            // sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:MOVEACTION object:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], DIRECTION:@(direction)}];
         } else if (sender.state == UIGestureRecognizerStateEnded) {
             CGFloat offsetX = newCenter.x - topCell.originalCenter.x;
             if (fabs(offsetX) > _panDistance) {
@@ -220,7 +220,7 @@
             }
             CGFloat sendPercent = fabs(percentX);
             sendPercent = sendPercent >= 1 ? 1 : sendPercent;
-            [cell moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], PERCENTX:[NSNumber numberWithFloat:percentX], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
+            [cell moveWithParams:@{PERCENTMAIN:[NSNumber numberWithFloat:sendPercent], @"MoveToX":[NSNumber numberWithFloat:moveToX]}];
         }];
     } completion:^(BOOL finished) {
         [self changedStateCell:cell withDirection:direction fromClick:YES];
@@ -255,6 +255,7 @@
         cell.currentState = toState;
         if (toState == FirstCard) {
             [cell addGestureRecognizer:self.panGesture];
+            [cell addGestureRecognizer:self.tapGesture];
             self.topCard = cell;
         }
     }
@@ -271,7 +272,7 @@
     NSDictionary *object = notification.object;
     CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];
     PanDirection direction = [[object objectForKey:DIRECTION] integerValue];
-    if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
+    if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)]) {
         [self.delegate slideCardCell:self.topCard didPanPercent:percentX withDirection:direction];
     }
 }
@@ -283,6 +284,12 @@
 }
 
 #pragma mark - event response
+
+- (void)tapCellAction:(UITapGestureRecognizer *)sender {
+    if ([self.delegate respondsToSelector:@selector(didSelectCell:atIndex:)]) {
+        [self.delegate didSelectCell:self.topCard atIndex:self.topCard.index];
+    }
+}
 
 - (void)animateTopCardToDirection:(PanDirection)direction {
     if (_isCellAnimating) return;
@@ -309,6 +316,7 @@
         self.latestItemIndex += 1;
         [self sendSubviewToBack:cell];
         if ([self shouldCallDelegateOrDataSource:cell]) {
+            cell.index = self.latestItemIndex;
             [self.dataSource loadNewDataInCell:cell atIndex:self.latestItemIndex];
         }
         [UIView animateWithDuration:0.2 animations:^{
@@ -425,6 +433,22 @@
         [_btn_nodata addTarget:self action:@selector(loadMoreData) forControlEvents:UIControlEventTouchUpInside];
     }
     return _btn_nodata;
+}
+
+- (UIPanGestureRecognizer *)panGesture {
+    if (_panGesture == nil) {
+        _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panCellAction:)];
+        _panGesture.maximumNumberOfTouches = 1;
+        _panGesture.minimumNumberOfTouches = 1;
+    }
+    return _panGesture;
+}
+
+- (UITapGestureRecognizer *)tapGesture {
+    if (_tapGesture == nil) {
+        _tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapCellAction:)];
+    }
+    return _tapGesture;
 }
 
 @end

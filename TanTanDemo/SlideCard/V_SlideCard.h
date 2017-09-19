@@ -22,29 +22,28 @@
 /** cell的大小 默认self.frame.size*/
 @property (nonatomic) CGSize cellSize;
 /** cell默认在中心的位置 设置cellCenterYOffset控制cell的中心的Y值 */
-@property (nonatomic) CGFloat cellCenterYOffset;//这个字段设置的早晚也要考虑到cell刷新的问题
+@property (nonatomic) CGFloat cellCenterYOffset;
+
 //shadow enable
-@property (nonatomic) BOOL enableShadow __deprecated;
+//@property (nonatomic) BOOL enableShadow __deprecated;
 
 @property (nonatomic, weak)   id<V_SlideCardDelegate>       delegate;
 @property (nonatomic, weak)   id<V_SlideCardDataSource>     dataSource;
 
 - (void)reloadData;
 - (void)registerCellClassName:(NSString *)aClassName;
-/**外部调用 让动画驱动翻一页*/
+/**外部调用 让驱动TopCard翻页 */
 - (void)animateTopCardToDirection:(PanDirection)direction;
 @end
 
+#warning 代理方法需要整理
 @protocol V_SlideCardDataSource<NSObject>
 
 - (void)loadNewData;
-
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
 - (void)loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 
 @end
-
-
 
 @protocol V_SlideCardDelegate<NSObject>
 @optional
