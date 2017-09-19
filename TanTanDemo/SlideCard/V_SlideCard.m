@@ -49,6 +49,10 @@
 - (void)setUpConfig {
     _latestItemIndex = 0;
     _panDistance = 100;
+    _cellScaleSpace = 0.1;
+    _cellSize = self.frame.size;
+    _cellCenterYOffset = 0;
+    _cellOffsetDirection = CellOffsetDirectionBottom;
     _cardNumber = 4;
     _showingCardNumber = _cardNumber;
     _isCellAnimating = NO;
@@ -56,7 +60,6 @@
 }
 
 - (void)initUI {
-    self.backgroundColor = [UIColor whiteColor];
     [self addSubview:self.btn_nodata];
 }
 
@@ -72,13 +75,14 @@
     [self.underCells removeAllObjects];
 
     for (NSInteger i = 0; i < _cardNumber; i ++) {
-        CGSize cellSize = self.cellSize;
-        if (cellSize.width <= 0 || self.cellSize.height <= 0) {
-            cellSize = self.frame.size;
+        if (self.cellSize.width <= 0 || self.cellSize.height <= 0) {
+            self.cellSize = self.frame.size;
         }
-        V_SlideCardCell *cell = [[[self currentClass] alloc] initWithFrame:CGRectMake(0, 0, cellSize.width, cellSize.height)];
-        cell.offsetY = self.celloffsetY;
-        cell.cellMarginY = cellSize.height * TRANSFORM_SPACE - 5;
+        V_SlideCardCell *cell = [[[self currentClass] alloc] initWithFrame:CGRectMake(0, 0, self.cellSize.width, self.cellSize.height)];
+        cell.offsetDirection = self.cellOffsetDirection;
+        cell.centerYOffset = self.cellCenterYOffset;
+        cell.scaleSpace = self.cellScaleSpace;
+        cell.heightSpace = self.cellSize.height * self.cellScaleSpace;
         cell.delegate = self;
         [self.underCells addObject:cell];
     }
@@ -131,9 +135,13 @@
             CGFloat percentX = (newCenter.x - topCell.originalCenter.x) / _panDistance;
             CGFloat percentY = (newCenter.y - topCell.originalCenter.y) / _panDistance;
             
-            //这里需要发送的是x／y的变化较大者的绝对值，且轻微移动不做缩放操作 绝对值 -0.15
+            //这里需要发送的是x／y的变化较大者的绝对值，
             CGFloat sendPercent = fabs(percentX) > fabs(percentY) ? fabs(percentX) : fabs(percentY);
-            sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+            
+            //仅向下层叠时 轻微移动不做缩放操作 绝对值 -0.15
+            if (self.cellOffsetDirection == CellOffsetDirectionBottom) {
+                sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
+            }
             sendPercent = sendPercent >= 1 ? 1 : sendPercent;
             
             PanDirection direction = (percentX > 0) ? PanDirectionRight : PanDirectionLeft;
@@ -218,6 +226,7 @@
         [self changedStateCell:cell withDirection:direction fromClick:YES];
     }];
 }
+
 //动画结束
 - (void)changedStateCell:(V_SlideCardCell *)cell withDirection:(PanDirection)direction fromClick:(BOOL)fromClick {
     if (cell.currentState == FirstCard) {
@@ -327,6 +336,19 @@
     }
 }
 
+- (void)resetCell {
+    NSInteger i = 0;
+    for (V_SlideCardCell *cell in self.underCells) {
+        cell.offsetDirection = self.cellOffsetDirection;
+        cell.centerYOffset = self.cellCenterYOffset;
+        cell.scaleSpace = self.cellScaleSpace;
+        cell.heightSpace = self.cellSize.height * self.cellScaleSpace;
+        
+        cell.currentState = i;
+        i ++;
+    }
+}
+
 #pragma mark - V_SlideCardDataSource
 
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard {
@@ -337,6 +359,20 @@
 }
 
 #pragma mark - setter
+
+- (void)setCellOffsetDirection:(CellOffsetDirection)cellOffsetDirection {
+    if (_cellOffsetDirection != cellOffsetDirection) {
+        _cellOffsetDirection = cellOffsetDirection;
+        [self resetCell];
+    }
+}
+
+- (void)setCellCenterYOffset:(CGFloat)cellCenterYOffset {
+    if (_cellCenterYOffset != cellCenterYOffset) {
+        _cellCenterYOffset = cellCenterYOffset;
+        [self resetCell];
+    }
+}
 
 - (void)registerCellClassName:(NSString *)aClassName {
     self.cellClassName = aClassName;

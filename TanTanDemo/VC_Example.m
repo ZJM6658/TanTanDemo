@@ -23,6 +23,10 @@
 
 @property (nonatomic, strong) UILabel *panInfo;
 
+#pragma mark - BossJob
+@property (nonatomic, strong) UIButton  *btn_;
+@property (nonatomic, strong) UIButton  *btn_talk;
+
 #pragma mark - TanTan
 @property (nonatomic, strong) UIButton  *btn_like;
 @property (nonatomic, strong) UIButton  *btn_hate;
@@ -37,6 +41,9 @@
     _pageNo = 0;
     _buttonWidth = 70;
     _buttonBorderWidth = 8;
+    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(leftBarButtonClick)];
+
     
     self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.slideCard];//加入滑动组件
@@ -59,11 +66,18 @@
         self.navigationController.navigationBar.barTintColor = [UIColor colorWithRed:83.0/255.0 green:202.0/255.0 blue:196.0/255.0 alpha:1];
         self.navigationController.navigationBar.translucent = NO;
         self.title = @"BOSS直聘";
+        //磨砂背景
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:self.view.bounds];
+        imageView.image = [UIImage imageNamed:@"bossBg"];
+        [self .view addSubview:imageView];
+        [self.view sendSubviewToBack:imageView];
+        
+        [self.view addSubview:self.btn_like];
+        [self.view addSubview:self.btn_hate];
     }
     
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(leftBarButtonClick)];
 
-    self.automaticallyAdjustsScrollViewInsets = YES;
+//    self.automaticallyAdjustsScrollViewInsets = YES;
     
 //    self.view.height -= 64;
 //    self.edgesForExtendedLayout = UIRectEdgeNone;
@@ -74,6 +88,16 @@
 #pragma mark - event response
 
 - (void)likeOrHateAction:(UIButton *)sender {
+     // 按钮点击缩放效果
+     CABasicAnimation*pulse = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+     pulse.timingFunction= [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+     pulse.duration = 0.08;
+     pulse.repeatCount= 1;
+     pulse.autoreverses= YES;
+     pulse.fromValue= [NSNumber numberWithFloat:0.9];
+     pulse.toValue= [NSNumber numberWithFloat:1.1];
+     [sender.layer addAnimation:pulse forKey:nil];
+     
     if (sender.tag == 520) {
         [self.slideCard animateTopCardToDirection:PanDirectionRight];
     } else {
@@ -133,21 +157,6 @@
 #warning 底部按钮borderWidth不支持动画，抽时间改成底部有个圆圈，上面有个button改变transform\
 然后按钮点击时也添加个跳动效果
     
-    /*
-     按钮点击缩放效果 
-     
-     CABasicAnimation*pulse = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
-     pulse.timingFunction= [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-     pulse.duration = 0.08;
-     pulse.repeatCount= 1;
-     pulse.autoreverses= YES;
-     pulse.fromValue= [NSNumber numberWithFloat:0.7];
-     pulse.toValue= [NSNumber numberWithFloat:1.3];
-     [button layer]
-     addAnimation:pulse forKey:nil];
-     
-     */
-    
     if (self.exampleType == ExampleTypeTanTan) {
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             self.btn_like.layer.borderWidth = _buttonBorderWidth;
@@ -156,8 +165,6 @@
             cell.iv_hate.alpha = 0;
         } completion:nil];
     }
-    
-
 }
 
 - (void)slideCardCellDidResetFrame:(V_TanTan *)cell {
@@ -174,7 +181,16 @@
 #pragma mark - private methods
 
 - (void)leftBarButtonClick {
-    [self dismissViewControllerAnimated:YES completion:nil];
+    if (self.navigationController.viewControllers.count > 1) {
+        self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor blackColor]};
+        self.navigationController.navigationBar.barTintColor = [UIColor whiteColor];
+        self.navigationController.navigationBar.translucent = YES;
+        
+        [self.navigationController popViewControllerAnimated:YES];
+    } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
 }
 
 - (void)rightBarButtonClick { }
@@ -184,16 +200,17 @@
 - (V_SlideCard *)slideCard {
     if (_slideCard == nil) {
         _slideCard = [[V_SlideCard alloc] initWithFrame:self.view.bounds];
-        
-        _slideCard.cellSize = CGSizeMake(350, 400);
+        _slideCard.cellScaleSpace = 0.06;
+        _slideCard.cellCenterYOffset = - 100;
 
+        _slideCard.cellSize = CGSizeMake(350, 400);
         NSString *cellClassName = @"";
         if (self.exampleType == ExampleTypeTanTan) {
             cellClassName = @"V_TanTan";
-            _slideCard.celloffsetY = - 100;
         } else if (self.exampleType == ExampleTypeBoss) {
             cellClassName = @"V_BossJob";
             _slideCard.cellSize = CGSizeMake(320, 350);
+            _slideCard.cellOffsetDirection = CellOffsetDirectionTop;
         }
         
         [_slideCard registerCellClassName:cellClassName];
@@ -226,13 +243,19 @@
 - (UIButton *)btn_like {
     if (_btn_like == nil) {
         _btn_like = [[UIButton alloc] initWithFrame:CGRectMake((self.view.frame.size.width - _buttonWidth * 2) / 3 * 2 + _buttonWidth, self.view.frame.size.height - _buttonWidth - 30 - 64, _buttonWidth, _buttonWidth)];
-        [_btn_like setBackgroundImage:[UIImage imageNamed:@"likeWhole"] forState:UIControlStateNormal];
-        _btn_like.layer.borderColor = [UIColor colorWithWhite:0.2 alpha:0.9].CGColor;
-        _btn_like.layer.borderWidth = _buttonBorderWidth;
-        _btn_like.layer.masksToBounds = YES;
-        _btn_like.layer.cornerRadius = _buttonWidth / 2;
         _btn_like.tag = 520;
         [_btn_like addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
+        if (self.exampleType == ExampleTypeTanTan) {
+            _btn_like.layer.borderColor = [UIColor colorWithWhite:0.2 alpha:0.9].CGColor;
+            _btn_like.layer.borderWidth = _buttonBorderWidth;
+            _btn_like.layer.masksToBounds = YES;
+            _btn_like.layer.cornerRadius = _buttonWidth / 2;
+            [_btn_like setBackgroundImage:[UIImage imageNamed:@"tantanLike"]
+                                 forState:UIControlStateNormal];
+        } else if (self.exampleType == ExampleTypeBoss) {
+            [_btn_like setBackgroundImage:[UIImage imageNamed:@"bossLike"]
+                                 forState:UIControlStateNormal];
+        }
     }
     return _btn_like;
 }
@@ -240,13 +263,18 @@
 - (UIButton *)btn_hate {
     if (_btn_hate == nil) {
         _btn_hate = [[UIButton alloc] initWithFrame:CGRectMake((self.view.frame.size.width - _buttonWidth * 2) / 3, self.view.frame.size.height - _buttonWidth - 30 - 64, _buttonWidth, _buttonWidth)];
-        [_btn_hate setBackgroundImage:[UIImage imageNamed:@"hateWhole"] forState:UIControlStateNormal];
-        _btn_hate.layer.borderColor = [UIColor colorWithWhite:0.2 alpha:0.9].CGColor;
-        _btn_hate.layer.borderWidth = _buttonBorderWidth;
-        _btn_hate.layer.masksToBounds = YES;
-        _btn_hate.layer.cornerRadius = _buttonWidth / 2;
         _btn_hate.tag = 521;
         [_btn_hate addTarget:self action:@selector(likeOrHateAction:) forControlEvents:UIControlEventTouchUpInside];
+        if (self.exampleType == ExampleTypeTanTan) {
+            _btn_hate.layer.borderColor = [UIColor colorWithWhite:0.4 alpha:0.9].CGColor;
+            _btn_hate.layer.borderWidth = _buttonBorderWidth;
+            _btn_hate.layer.masksToBounds = YES;
+            _btn_hate.layer.cornerRadius = _buttonWidth / 2;
+            [_btn_hate setBackgroundImage:[UIImage imageNamed:@"tantanHate"] forState:UIControlStateNormal];
+        } else if (self.exampleType == ExampleTypeBoss) {
+            [_btn_hate setBackgroundImage:[UIImage imageNamed:@"bossHate"] forState:UIControlStateNormal];
+        }
+        
     }
     return _btn_hate;
 }

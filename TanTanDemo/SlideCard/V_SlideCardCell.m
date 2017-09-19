@@ -48,7 +48,6 @@
 }
 
 - (void)dealloc {
-//    NSLog(@"cell dealloc");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -83,11 +82,15 @@
     } else {
         //中间cell 缩放+位移
         CGFloat percentMain = [[params objectForKey:PERCENTMAIN] floatValue];
-        CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE + TRANSFORM_SPACE * percentMain;
-        CGFloat offsetY = self.cellMarginY * percentMain;
-        
+        CGFloat scale = 1 - self.frameState * self.scaleSpace + self.scaleSpace * percentMain;
+
+        //尝试过单独设置cell间Y方向的偏移间隔，出现问题是缩放的改变和Y的改变不匹配，松手时会抖动导致过渡不平滑
+        CGFloat currentSpaceY = self.heightSpace * percentMain;
+        if (self.offsetDirection == CellOffsetDirectionTop) {
+            currentSpaceY *= -1;
+        }
         self.transform = CGAffineTransformMakeScale(scale, scale);
-        self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - offsetY);
+        self.center = CGPointMake(self.originalCenter.x, self.originalCenter.y - currentSpaceY);
     }
 }
 
@@ -101,7 +104,7 @@
             self.transform = CGAffineTransformMakeRotation(0);
         } else {
             self.center = self.originalCenter;
-            CGFloat scale = 1 - self.frameState * TRANSFORM_SPACE;
+            CGFloat scale = 1 - self.frameState * self.scaleSpace;
             self.transform = CGAffineTransformMakeScale(scale, scale);
         }
     } completion:^(BOOL finished) {
@@ -125,12 +128,15 @@
 - (void)setCurrentState:(CardState)currentState {
     NSAssert(self.superview, @"必须先加入父试图,再设置state");
     _currentState = currentState;
-    CGFloat spaceY = self.cellMarginY * self.frameState;
-
-    CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y + self.offsetY + spaceY);
+   
+    CGFloat spaceY = self.heightSpace * self.frameState;//除2后刚好平齐
+    if (self.offsetDirection == CellOffsetDirectionTop) {
+        spaceY *= -1;
+    }
+    CGPoint currentStateCenter = CGPointMake(self.superview.center.x, self.superview.center.y + self.centerYOffset + spaceY);
     self.originalCenter = currentStateCenter;
     self.center = currentStateCenter;
-    CGFloat scale = 1 - TRANSFORM_SPACE * self.frameState;
+    CGFloat scale = 1 - self.scaleSpace * self.frameState;
     self.transform = CGAffineTransformMakeScale(scale, scale);
     self.userInteractionEnabled = (_currentState == FirstCard);
 }

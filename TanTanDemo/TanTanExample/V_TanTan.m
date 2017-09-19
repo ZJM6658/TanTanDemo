@@ -11,10 +11,7 @@
 
 @interface V_TanTan ()
 
-@property (nonatomic)         CGFloat       signAlpha;
-
 @property (nonatomic, strong) UIImageView   *iv_user;
-
 @property (nonatomic, strong) UILabel       *lb_name;
 @property (nonatomic, strong) UILabel       *lb_age;
 @property (nonatomic, strong) UILabel       *lb_constellation;
@@ -47,13 +44,7 @@
     self.lb_jobOrDistance.text = dataItem.jobName.length ? dataItem.jobName : dataItem.distance;
 }
 
-- (void)setSignAlpha:(CGFloat)signAlpha {
-    self.iv_like.alpha = signAlpha;
-    self.iv_hate.alpha = - signAlpha;
-}
-
 #pragma mark - getter
-
 
 - (UIImageView *)iv_user {
     if (_iv_user == nil) {

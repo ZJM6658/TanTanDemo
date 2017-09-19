@@ -45,9 +45,13 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     VC_Example *example = [[VC_Example alloc] init];
-    UINavigationController *rootNav = [[UINavigationController alloc] initWithRootViewController:example];
+//    UINavigationController *rootNav = [[UINavigationController alloc] initWithRootViewController:example];
     example.exampleType = indexPath.row;
-    [self presentViewController:rootNav animated:YES completion:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.navigationController pushViewController:example animated:YES];
+
+//        [self presentViewController:rootNav animated:YES completion:nil];
+    });
 }
 
 @end

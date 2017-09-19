@@ -21,6 +21,11 @@ typedef NS_ENUM(NSInteger, CardState) {
     OtherCard,
 };
 
+typedef NS_ENUM(NSInteger, CellOffsetDirection) {
+    CellOffsetDirectionBottom = 0,
+    CellOffsetDirectionTop,
+};
+
 @protocol V_SlideCardCellDelegate;
 
 @interface V_SlideCardCell : UIView
@@ -28,15 +33,18 @@ typedef NS_ENUM(NSInteger, CardState) {
 @property (nonatomic, strong) UIView *contentView;
 @property (nonatomic, readonly) CGPoint originalCenter;
 
+@property (nonatomic) CellOffsetDirection offsetDirection;
+
+@property (nonatomic) CGFloat scaleSpace;
 /** 中心Y偏移值*/
-@property (nonatomic) CGFloat offsetY;
+@property (nonatomic) CGFloat centerYOffset;
 
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
 
 /** cell当前所处的状态 */
 @property (nonatomic)         CardState     currentState;
 /** cell之间的Y偏移，显示层叠效果*/
-@property (nonatomic)         CGFloat       cellMarginY;
+@property (nonatomic)         CGFloat       heightSpace;
 
 - (void)hideToLeft;
 - (void)setUpConfig;
