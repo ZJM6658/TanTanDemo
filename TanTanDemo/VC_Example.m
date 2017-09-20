@@ -101,17 +101,17 @@
     }
 }
 #pragma mark - V_SlideCardDataSource
-
-- (void)loadNewData {
+- (void)loadNewDataInSlideCard:(V_SlideCard *)slideCard {
     _pageNo ++;
     self.listData = [self getDataSourceWithPageNo:_pageNo];
     [self.slideCard reloadData];
 }
 
-- (void)loadNewDataInCell:(V_TanTan *)cell atIndex:(NSInteger)index {
+- (void)slideCard:(V_SlideCard *)slideCard loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
     if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
         M_TanTan *item = [self.listData objectAtIndex:index];
-        cell.dataItem = item;
+        tantanCell.dataItem = item;
     }
 }
 
@@ -121,56 +121,78 @@
 
 #pragma mark - V_SlideCardDelegate
 
-- (void)slideCardCell:(V_TanTan *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction {
-    
-#warning 现在空白cell 不走代理的  那么判断代理那里 还是得更完善才行
-    NSString *directionDesc = (direction == PanDirectionLeft) ? @"左" : @"右";
-    self.panInfo.text = [NSString stringWithFormat:@"拖拽方向：%@, 百分比：%.2f", directionDesc, percent];
-    
-    if (self.exampleType == ExampleTypeTanTan) {
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction atIndex:(NSInteger)index {
+
+    if (self.exampleType == ExampleTypeEmpty) {
+        NSString *directionStr = direction == PanDirectionLeft ? @"左" : @"右";
+        NSString *panInfoStr = [NSString stringWithFormat:@"拖拽方向：%@, 百分比：%.2f", directionStr, percent];
+        NSRange range = [panInfoStr rangeOfString:directionStr];
+        NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:panInfoStr];
+        [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:range];
+        [attributeStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:24] range:range];
+        self.panInfo.attributedText = attributeStr;
+    } else if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
         if (direction == PanDirectionRight) {
-            cell.iv_like.alpha = percent;
+            tantanCell.iv_like.alpha = percent;
             self.btn_like.layer.borderWidth = _buttonBorderWidth * (1 - percent);
         } else {
-            cell.iv_hate.alpha = percent;
+            tantanCell.iv_hate.alpha = percent;
             self.btn_hate.layer.borderWidth = _buttonBorderWidth * (1 - percent);
         }
     }
 }
 
-- (void)slideCardCell:(V_TanTan *)cell willScrollToDirection:(PanDirection)direction {
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell willScrollToDirection:(PanDirection)direction atIndex:(NSInteger)index {
     if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
         if (direction == PanDirectionRight) {
-            cell.iv_like.alpha = 1;
+            tantanCell.iv_like.alpha = 1;
         } else {
-            cell.iv_hate.alpha = 1;
+            tantanCell.iv_hate.alpha = 1;
         }
     }
 }
 
-- (void)slideCardCell:(V_TanTan *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
-    if (self.exampleType == ExampleTypeTanTan) {
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
+    
+    if (self.exampleType == ExampleTypeEmpty) {
+        NSString *directionStr = direction == PanDirectionLeft ? @"左" : @"右";
+        NSString *panInfoStr = [NSString stringWithFormat:@"向%@翻了一页", directionStr];
+        NSRange range = [panInfoStr rangeOfString:directionStr];
+        NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:panInfoStr];
+        [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor blueColor] range:range];
+        [attributeStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:24] range:range];
+
+        self.panInfo.attributedText = attributeStr;
+    } else if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             self.btn_like.layer.borderWidth = _buttonBorderWidth;
             self.btn_hate.layer.borderWidth = _buttonBorderWidth;
-            cell.iv_like.alpha = 0;
-            cell.iv_hate.alpha = 0;
+            tantanCell.iv_like.alpha = 0;
+            tantanCell.iv_hate.alpha = 0;
         } completion:nil];
     }
 }
 
-- (void)slideCardCellDidResetFrame:(V_TanTan *)cell {
-    if (self.exampleType == ExampleTypeTanTan) {
+- (void)slideCard:(V_SlideCard *)slideCard didResetFrameInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
+    
+    if (self.exampleType == ExampleTypeEmpty) {
+        self.panInfo.text = @"恢复原位";
+    } else if (self.exampleType == ExampleTypeTanTan) {
+        V_TanTan *tantanCell = (V_TanTan *)cell;
+
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             self.btn_like.layer.borderWidth = _buttonBorderWidth;
             self.btn_hate.layer.borderWidth = _buttonBorderWidth;
-            cell.iv_like.alpha = 0;
-            cell.iv_hate.alpha = 0;
+            tantanCell.iv_like.alpha = 0;
+            tantanCell.iv_hate.alpha = 0;
         } completion:nil];
     }
 }
 
-- (void)didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
+- (void)slideCard:(V_SlideCard *)slideCard didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
     if (self.exampleType == ExampleTypeTanTan) {
         V_TanTan *tantanCell = (V_TanTan *)cell;
         NSLog(@"tantan userName = %@", tantanCell.dataItem.userName);
@@ -274,7 +296,6 @@
         } else if (self.exampleType == ExampleTypeBoss) {
             [_btn_hate setBackgroundImage:[UIImage imageNamed:@"bossHate"] forState:UIControlStateNormal];
         }
-        
     }
     return _btn_hate;
 }
@@ -283,6 +304,8 @@
     if (_panInfo == nil) {
         _panInfo = [[UILabel alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 80, self.view.frame.size.width, 80)];
         _panInfo.numberOfLines = 0;
+        _panInfo.font = [UIFont systemFontOfSize:20];
+        _panInfo.textColor = [UIColor blackColor];
         _panInfo.textAlignment = NSTextAlignmentCenter;
     }
     return _panInfo;

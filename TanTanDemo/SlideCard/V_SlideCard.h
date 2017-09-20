@@ -36,25 +36,18 @@
 - (void)animateTopCardToDirection:(PanDirection)direction;
 @end
 
-#warning 代理方法需要整理
 @protocol V_SlideCardDataSource<NSObject>
-
-- (void)loadNewData;
+- (void)loadNewDataInSlideCard:(V_SlideCard *)slideCard;
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
-- (void)loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
-
+- (void)slideCard:(V_SlideCard *)slideCard loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 @end
 
 @protocol V_SlideCardDelegate<NSObject>
 @optional
-- (void)slideCardCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction;
-
-- (void)slideCardCell:(V_SlideCardCell *)cell willScrollToDirection:(PanDirection)direction;
-
-- (void)slideCardCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index;
-
-- (void)slideCardCellDidResetFrame:(V_SlideCardCell *)cell;
-
-- (void)didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction atIndex:(NSInteger)index;
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell willScrollToDirection:(PanDirection)direction atIndex:(NSInteger)index;
+- (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index;
+- (void)slideCard:(V_SlideCard *)slideCard didResetFrameInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
+- (void)slideCard:(V_SlideCard *)slideCard didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 
 @end

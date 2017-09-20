@@ -7,7 +7,6 @@
 //
 
 #import "V_SlideCardCell.h"
-#import "V_SlideCard.h"
 
 @interface V_SlideCardCell ()
 

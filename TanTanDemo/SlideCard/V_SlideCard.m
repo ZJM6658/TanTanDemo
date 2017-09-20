@@ -95,7 +95,7 @@
 
         cell.index = i;
         if ([self shouldCallDelegateOrDataSource:cell]) {
-            [self.dataSource loadNewDataInCell:cell atIndex:i];
+            [self.dataSource slideCard:self loadNewDataInCell:cell atIndex:i];
         }
         cell.alpha = 1;
 
@@ -169,21 +169,21 @@
 }
 
 - (BOOL)shouldCallDelegateOrDataSource:(V_SlideCardCell *)cell {
-    if (self.cellClassName.length > 0) {
-        Class class = NSClassFromString(self.cellClassName);
-        if ([cell isKindOfClass:class]) {
-            return YES;
-        }
-    }
-    return NO;
+//    if (self.cellClassName.length > 0) {
+//        Class class = NSClassFromString(self.cellClassName);
+//        if ([cell isKindOfClass:class]) {
+//            return YES;
+//        }
+//    }
+    return YES;
 }
 
 //直接动画翻页后状态变更
 - (void)scrollCell:(V_SlideCardCell *)cell toDirection:(PanDirection)direction {
     //按钮点击的时候页面上的按钮需要有体现
     if (cell.currentState == FirstCard) {
-        if ([self.delegate respondsToSelector:@selector(slideCardCell:willScrollToDirection:)] && [self shouldCallDelegateOrDataSource:cell]) {
-            [self.delegate slideCardCell:cell willScrollToDirection:direction];
+        if ([self.delegate respondsToSelector:@selector(slideCard:topCell:willScrollToDirection:atIndex:)] && [self shouldCallDelegateOrDataSource:cell]) {
+            [self.delegate slideCard:self topCell:cell willScrollToDirection:direction atIndex:cell.index];
         }
     }
     
@@ -243,10 +243,10 @@
             cell.transform = CGAffineTransformMakeRotation(0);
             cell.alpha = 0;
         } completion:^(BOOL finished) {
-            if ([self.delegate respondsToSelector:@selector(slideCardCell:didChangedStateWithDirection:atIndex:)] && [self shouldCallDelegateOrDataSource:cell]) {
-                [self.delegate slideCardCell:cell didChangedStateWithDirection:direction atIndex:self.latestItemIndex];
-            }
             cell.currentState = OtherCard;
+            if ([self.delegate respondsToSelector:@selector(slideCard:topCell:didChangedStateWithDirection:atIndex:)] && [self shouldCallDelegateOrDataSource:cell]) {
+                [self.delegate slideCard:self topCell:cell didChangedStateWithDirection:direction atIndex:self.latestItemIndex];
+            }
             [self loadNewData:cell];
             _isCellAnimating = NO;
         }];
@@ -272,22 +272,23 @@
     NSDictionary *object = notification.object;
     CGFloat percentX = [[object objectForKey:PERCENTX] floatValue];
     PanDirection direction = [[object objectForKey:DIRECTION] integerValue];
-    if ([self.delegate respondsToSelector:@selector(slideCardCell:didPanPercent:withDirection:)]) {
-        [self.delegate slideCardCell:self.topCard didPanPercent:percentX withDirection:direction];
+    if ([self.delegate respondsToSelector:@selector(slideCard:topCell:didPanPercent:withDirection:atIndex:)]) {
+        [self.delegate slideCard:self topCell:self.topCard didPanPercent:percentX withDirection:direction atIndex:self.topCard.index];
     }
 }
 
 - (void)resetFrame:(NSNotification *)notification {
-    if ([self.delegate respondsToSelector:@selector(slideCardCellDidResetFrame:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
-        [self.delegate slideCardCellDidResetFrame:self.topCard];
+    if ([self.delegate respondsToSelector:@selector(slideCard:didResetFrameInCell:atIndex:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
+        [self.delegate slideCard:self didResetFrameInCell:self.topCard atIndex:self.topCard.index];
     }
 }
 
 #pragma mark - event response
 
 - (void)tapCellAction:(UITapGestureRecognizer *)sender {
-    if ([self.delegate respondsToSelector:@selector(didSelectCell:atIndex:)]) {
-        [self.delegate didSelectCell:self.topCard atIndex:self.topCard.index];
+    V_SlideCardCell *senderCell = (V_SlideCardCell *)sender.view;
+    if ([self.delegate respondsToSelector:@selector(slideCard:didSelectCell:atIndex:)]) {
+        [self.delegate slideCard:self didSelectCell:senderCell atIndex:senderCell.index];
     }
 }
 
@@ -298,8 +299,8 @@
 
 - (void)loadMoreData {
     //加载下一组数据
-    if ([self.dataSource respondsToSelector:@selector(loadNewData)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
-        [self.dataSource loadNewData];
+    if ([self.dataSource respondsToSelector:@selector(loadNewDataInSlideCard:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
+        [self.dataSource loadNewDataInSlideCard:self];
     } else {
         [self reloadData];
     }
@@ -317,7 +318,7 @@
         [self sendSubviewToBack:cell];
         if ([self shouldCallDelegateOrDataSource:cell]) {
             cell.index = self.latestItemIndex;
-            [self.dataSource loadNewDataInCell:cell atIndex:self.latestItemIndex];
+            [self.dataSource slideCard:self loadNewDataInCell:cell atIndex:self.latestItemIndex];
         }
         [UIView animateWithDuration:0.2 animations:^{
             cell.alpha = 1;
