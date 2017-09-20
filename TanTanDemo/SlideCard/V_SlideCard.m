@@ -105,14 +105,13 @@
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.8 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             cell.currentState = i;
         } completion:^(BOOL finished) {
-            //添加拖拽手势
+            //添加手势
             if (i == FirstCard) {
                 [cell addGestureRecognizer:self.panGesture];
                 [cell addGestureRecognizer:self.tapGesture];
                 self.topCard = cell;
             }
         }];
-        
         self.latestItemIndex = i;
     }
 }
@@ -140,7 +139,7 @@
             if (percentX > 1) percentX = 1;
             if (percentY > 1) percentY = 1;
             
-            //这里需要发送的是x／y的变化较大者的绝对值，
+            //这里需要发送的是x／y的变化较大者的绝对值
             CGFloat sendPercent = percentX > percentY ? percentX : percentY;
             //轻微移动不做缩放操作 绝对值 -0.15
             // sendPercent = sendPercent < 0.15 ? 0: sendPercent - 0.15;
@@ -168,6 +167,7 @@
     }
 }
 
+//控制是否调用delegate or dataSource方法, 目前没做拦截
 - (BOOL)shouldCallDelegateOrDataSource:(V_SlideCardCell *)cell {
 //    if (self.cellClassName.length > 0) {
 //        Class class = NSClassFromString(self.cellClassName);
@@ -188,7 +188,6 @@
     }
     
     _isCellAnimating = YES;
-//#warning 这个动画时间可能有点长，找时间再调 可以让cell移动距离小点，刚好移出屏外 缩短时间
     [UIView animateKeyframesWithDuration:0.5 delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubicPaced animations:^{
         [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:1/4.0 animations:^{
             //FirstCard先回撤
@@ -297,8 +296,8 @@
     [self setTopCardScrollToDirection:direction fromClick:YES];
 }
 
+//加载下一组数据
 - (void)loadMoreData {
-    //加载下一组数据
     if ([self.dataSource respondsToSelector:@selector(loadNewDataInSlideCard:)] && [self shouldCallDelegateOrDataSource:self.topCard]) {
         [self.dataSource loadNewDataInSlideCard:self];
     } else {
@@ -389,13 +388,14 @@
 }
 
 - (void)setCellSize:(CGSize)cellSize {
-    _cellSize = cellSize;
-    [self layoutSlideCards];
+    if (CGSizeEqualToSize(_cellSize, cellSize) == NO) {
+        _cellSize = cellSize;
+        [self layoutSlideCards];
+    }
 }
 
 - (void)setDataSource:(id<V_SlideCardDataSource>)dataSource {
     _dataSource = dataSource;
-//#warning 怎么保证cellName和DataSource都有了才创建
     if (self.cellClassName.length > 0) {
         [self layoutSlideCards];
     }
@@ -406,7 +406,7 @@
 - (Class)currentClass {
     if (self.cellClassName.length > 0) {
         Class cellClass = NSClassFromString(self.cellClassName);
-        NSAssert([cellClass isSubclassOfClass:[V_SlideCardCell class]], @"必须先调用registerCellClassName:设置自定义cell class，且必须继承自V_SlideCardCell");
+        NSAssert([cellClass isSubclassOfClass:[V_SlideCardCell class]], @"必须先调用registerCellClassName:设置自定义cell class, 且必须继承自V_SlideCardCell");
         
         return cellClass;
     }

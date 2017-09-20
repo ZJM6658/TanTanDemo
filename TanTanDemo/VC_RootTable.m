@@ -33,25 +33,24 @@
     return _rowTitles.count;
 }
 
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"cell"];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"cell"];
     }
     cell.textLabel.text = _rowTitles[indexPath.row];
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.row == 3) {
+        UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+        cell.detailTextLabel.text = @"有点懒, 没写, 嘿嘿😁";
+        return;
+    }
     VC_Example *example = [[VC_Example alloc] init];
-//    UINavigationController *rootNav = [[UINavigationController alloc] initWithRootViewController:example];
     example.exampleType = indexPath.row;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.navigationController pushViewController:example animated:YES];
-
-//        [self presentViewController:rootNav animated:YES completion:nil];
-    });
+    [self.navigationController pushViewController:example animated:YES];
 }
 
 @end

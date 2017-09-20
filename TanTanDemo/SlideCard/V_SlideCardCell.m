@@ -11,7 +11,6 @@
 @interface V_SlideCardCell ()
 
 @property (nonatomic, readwrite) CGPoint originalCenter;
-
 //获取当前实际缩放的state  第三个卡片及以后的缩放比例状态值一样
 @property (nonatomic) NSInteger     frameState;
 
@@ -83,7 +82,7 @@
         CGFloat percentMain = [[params objectForKey:PERCENTMAIN] floatValue];
         CGFloat scale = 1 - self.frameState * self.scaleSpace + self.scaleSpace * percentMain;
 
-        //尝试过单独设置cell间Y方向的偏移间隔，出现问题是缩放的改变和Y的改变不匹配，松手时会抖动导致过渡不平滑
+        //尝试过单独设置cell间Y方向的偏移间隔, 出现问题是缩放的改变和Y的改变不匹配, 松手时会抖动导致过渡不平滑
         CGFloat currentSpaceY = self.heightSpace * percentMain;
         if (self.offsetDirection == CellOffsetDirectionTop) {
             currentSpaceY *= -1;
@@ -123,7 +122,7 @@
 
 #pragma mark - setter
 
-/** 每次重新设置state时，originalCenter和transform需要设置为当前state的值*/
+/** 每次重新设置state时, originalCenter和transform需要设置为当前state的值*/
 - (void)setCurrentState:(CardState)currentState {
     NSAssert(self.superview, @"必须先加入父试图,再设置state");
     _currentState = currentState;

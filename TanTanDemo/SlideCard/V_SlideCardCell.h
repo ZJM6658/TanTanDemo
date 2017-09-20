@@ -30,36 +30,38 @@ typedef NS_ENUM(NSInteger, CellOffsetDirection) {
 
 @interface V_SlideCardCell : UIView
 
+/** 子类视图内容需要加在contentView中,默认有圆角 */
 @property (nonatomic, strong) UIView *contentView;
+/** 初始中心位置 */
 @property (nonatomic, readonly) CGPoint originalCenter;
-
-@property (nonatomic) NSInteger index;
-
-@property (nonatomic) CellOffsetDirection offsetDirection;
-
+/** cell当前所处的状态 */
+@property (nonatomic)         CardState     currentState;
+/** cell之间的Y偏移, 显示层叠效果*/
+@property (nonatomic)         CGFloat       heightSpace;
+/** cell之间的缩放间隔 */
 @property (nonatomic) CGFloat scaleSpace;
 /** 中心Y偏移值*/
 @property (nonatomic) CGFloat centerYOffset;
+/** 数据源的Index */
+@property (nonatomic) NSInteger index;
+/** 层叠方向 */
+@property (nonatomic) CellOffsetDirection offsetDirection;
 
 @property (nonatomic, weak)   id<V_SlideCardCellDelegate> delegate;
 
-/** cell当前所处的状态 */
-@property (nonatomic)         CardState     currentState;
-/** cell之间的Y偏移，显示层叠效果*/
-@property (nonatomic)         CGFloat       heightSpace;
-
+//将cell移到放到屏幕外左边
 - (void)hideToLeft;
+//移动cell
+- (void)moveWithParams:(NSDictionary *)params;
+//子类需要继承实现的方法
 - (void)setUpConfig;
 - (void)initUI;
-
-- (void)moveWithParams:(NSDictionary *)params;
 
 @end
 
 @protocol V_SlideCardCellDelegate <NSObject>
 
 - (void)setAnimatingState:(BOOL)animating;
-
 - (void)loadNewData:(V_SlideCardCell *)cell;
 
 @end

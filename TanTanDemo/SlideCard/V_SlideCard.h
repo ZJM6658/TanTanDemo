@@ -17,22 +17,22 @@
 @property (nonatomic) CellOffsetDirection cellOffsetDirection;
 /** cell之间的缩放间隔 */
 @property (nonatomic) CGFloat cellScaleSpace;
-/** 拖拽松手后翻页的阀值，默认是100 */
+/** 拖拽松手后翻页的阀值, 默认是100 */
 @property (nonatomic) CGFloat panDistance;
 /** cell的大小 默认self.frame.size*/
 @property (nonatomic) CGSize cellSize;
 /** cell默认在中心的位置 设置cellCenterYOffset控制cell的中心的Y值 */
 @property (nonatomic) CGFloat cellCenterYOffset;
 
-//shadow enable
-//@property (nonatomic) BOOL enableShadow __deprecated;
+//shadow enable 默认有阴影
+//@property (nonatomic) BOOL enableShadow;
 
 @property (nonatomic, weak)   id<V_SlideCardDelegate>       delegate;
 @property (nonatomic, weak)   id<V_SlideCardDataSource>     dataSource;
 
 - (void)reloadData;
 - (void)registerCellClassName:(NSString *)aClassName;
-/**外部调用 让驱动TopCard翻页 */
+/** 外部调用 驱动TopCard翻页 */
 - (void)animateTopCardToDirection:(PanDirection)direction;
 @end
 

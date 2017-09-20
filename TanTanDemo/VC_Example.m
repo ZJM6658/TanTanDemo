@@ -42,15 +42,11 @@
     _buttonWidth = 70;
     _buttonBorderWidth = 8;
     
-//    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(leftBarButtonClick)];
-//    [item setTintColor:[UIColor blackColor]];
-//    self.navigationItem.leftBarButtonItem = item;
-    
     self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.slideCard];//加入滑动组件
     
     if (self.exampleType == ExampleTypeEmpty) {
-        self.title = @"空白组件，没有自定义cell内容";
+        self.title = @"空白组件, 没有自定义cell内容";
         [self.view addSubview:self.panInfo];
     } else if (self.exampleType == ExampleTypeTanTan) {
         self.title = @"探探";
@@ -76,9 +72,15 @@
         
         [self.view addSubview:self.btn_like];
         [self.view addSubview:self.btn_hate];
-    } else {
-
     }
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor blackColor]};
+    self.navigationController.navigationBar.barTintColor = [UIColor whiteColor];
+    self.navigationController.navigationBar.translucent = YES;
 }
 
 #pragma mark - event response
@@ -100,6 +102,7 @@
         [self.slideCard animateTopCardToDirection:PanDirectionLeft];
     }
 }
+
 #pragma mark - V_SlideCardDataSource
 - (void)loadNewDataInSlideCard:(V_SlideCard *)slideCard {
     _pageNo ++;
@@ -122,10 +125,9 @@
 #pragma mark - V_SlideCardDelegate
 
 - (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction atIndex:(NSInteger)index {
-
     if (self.exampleType == ExampleTypeEmpty) {
         NSString *directionStr = direction == PanDirectionLeft ? @"左" : @"右";
-        NSString *panInfoStr = [NSString stringWithFormat:@"拖拽方向：%@, 百分比：%.2f", directionStr, percent];
+        NSString *panInfoStr = [NSString stringWithFormat:@"拖拽方向:%@, 百分比:%.2f", directionStr, percent];
         NSRange range = [panInfoStr rangeOfString:directionStr];
         NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:panInfoStr];
         [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:range];
@@ -155,10 +157,9 @@
 }
 
 - (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index {
-    
     if (self.exampleType == ExampleTypeEmpty) {
         NSString *directionStr = direction == PanDirectionLeft ? @"左" : @"右";
-        NSString *panInfoStr = [NSString stringWithFormat:@"向%@翻了一页", directionStr];
+        NSString *panInfoStr = [NSString stringWithFormat:@"刚刚向%@翻了一页", directionStr];
         NSRange range = [panInfoStr rangeOfString:directionStr];
         NSMutableAttributedString *attributeStr = [[NSMutableAttributedString alloc] initWithString:panInfoStr];
         [attributeStr addAttribute:NSForegroundColorAttributeName value:[UIColor blueColor] range:range];
@@ -177,12 +178,10 @@
 }
 
 - (void)slideCard:(V_SlideCard *)slideCard didResetFrameInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index {
-    
     if (self.exampleType == ExampleTypeEmpty) {
         self.panInfo.text = @"恢复原位";
     } else if (self.exampleType == ExampleTypeTanTan) {
         V_TanTan *tantanCell = (V_TanTan *)cell;
-
         [UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.5 initialSpringVelocity:0.0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
             self.btn_like.layer.borderWidth = _buttonBorderWidth;
             self.btn_hate.layer.borderWidth = _buttonBorderWidth;
@@ -203,11 +202,6 @@
 
 - (void)leftBarButtonClick {
     if (self.navigationController.viewControllers.count > 1) {
-        self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
-        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor blackColor]};
-        self.navigationController.navigationBar.barTintColor = [UIColor whiteColor];
-        self.navigationController.navigationBar.translucent = YES;
-        
         [self.navigationController popViewControllerAnimated:YES];
     } else {
         [self dismissViewControllerAnimated:YES completion:nil];
