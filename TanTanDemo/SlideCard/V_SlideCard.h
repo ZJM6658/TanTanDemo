@@ -37,17 +37,33 @@
 @end
 
 @protocol V_SlideCardDataSource<NSObject>
+
+/** 加载一组新数据 */
 - (void)loadNewDataInSlideCard:(V_SlideCard *)slideCard;
+
+/** 返回数据数量 */
 - (NSInteger)numberOfItemsInSlideCard:(V_SlideCard *)slideCard;
+
+/** cell翻页后进入最底层时，需要重新加载数据, 将cell返回给开发者自己设置 */
 - (void)slideCard:(V_SlideCard *)slideCard loadNewDataInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
+
 @end
 
 @protocol V_SlideCardDelegate<NSObject>
 @optional
+/** 提供用户拖拽方向 & panDistance的百分比 0.0～1.0 & index*/
 - (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didPanPercent:(CGFloat)percent withDirection:(PanDirection)direction atIndex:(NSInteger)index;
+
+/** 提供用户点击按钮调用翻页的时候将要翻的cell & 翻页方向 & index */
 - (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell willScrollToDirection:(PanDirection)direction atIndex:(NSInteger)index;
+
+/** 提供翻页完成后的cell & 翻页方向 & index */
 - (void)slideCard:(V_SlideCard *)slideCard topCell:(V_SlideCardCell *)cell didChangedStateWithDirection:(PanDirection)direction atIndex:(NSInteger)index;
+
+/** 提供拖拽距离不够翻页时松手恢复原状态的cell & index */
 - (void)slideCard:(V_SlideCard *)slideCard didResetFrameInCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
+
+/** 提供用户点击的cell & index */
 - (void)slideCard:(V_SlideCard *)slideCard didSelectCell:(V_SlideCardCell *)cell atIndex:(NSInteger)index;
 
 @end

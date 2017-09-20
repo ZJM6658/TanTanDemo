@@ -47,6 +47,10 @@
     
     if (self.exampleType == ExampleTypeEmpty) {
         self.title = @"空白组件, 没有自定义cell内容";
+//        [self.navigationController.navigationItem.leftBarButtonItem setTintColor:[UIColor blackColor]];
+        self.navigationController.navigationBar.tintColor = [UIColor blackColor];
+
+//        [self.navigationController.navigationItem.backBarButtonItem setTintColor:[UIColor blackColor]];
         [self.view addSubview:self.panInfo];
     } else if (self.exampleType == ExampleTypeTanTan) {
         self.title = @"探探";

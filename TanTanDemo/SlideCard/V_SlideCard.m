@@ -424,7 +424,7 @@
     if (_btn_nodata == nil) {
         _btn_nodata = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 200, 60)];
         _btn_nodata.center = self.center;
-        [_btn_nodata setTitle:@"没有更多数据了\n点击加载下一页" forState:UIControlStateNormal];
+        [_btn_nodata setTitle:@"没有更多数据了\n点击加载下一组" forState:UIControlStateNormal];
         _btn_nodata.titleLabel.numberOfLines = 0;
         [_btn_nodata setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [_btn_nodata setBackgroundColor:[UIColor blackColor]];
